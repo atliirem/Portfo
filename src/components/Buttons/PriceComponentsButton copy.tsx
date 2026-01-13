@@ -10,6 +10,7 @@ type Props = {
 };
 
 export const PriceComponentsButton = ({
+  
   width,
   height,
   label,

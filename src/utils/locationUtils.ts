@@ -1,6 +1,6 @@
 import { setSelectedCountry } from "../redux/Slice/countrySlice";
 import { setSelectedDistrict } from "../redux/Slice/districtSlice";
-import { setSelectedCity } from "../redux/Slice/filterSlice";
+import { setSelectedCity } from "../redux/Slice/citySlice";
 import { setSelectedStreet } from "../redux/Slice/streetsSlice";
 
 

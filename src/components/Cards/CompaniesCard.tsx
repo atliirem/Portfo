@@ -4,39 +4,47 @@ import {
   StyleSheet,
   Image,
   View,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
-import {  useNavigation } from "@react-navigation/native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
+import Ionicons from "@react-native-vector-icons/ionicons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ProfileStackParamList } from "../../navigation/Navbar/ProfileStack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { RootStackParamList } from "../../navigation/RootStack";
+
 type CompaniesCardProps = {
   id: number;
   title: string;
   image: string;
   city?: string;
- 
   type?: string;
-  onPress?: () => void;
+  onPress?: () => void; 
 };
 
-type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const CompaniesCard: React.FC<CompaniesCardProps> = ({
+  id,
   title,
   image,
   city,
-
   type,
-  onPress
+  onPress,
 }) => {
-     const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      navigation.navigate("CompaniesScreen", { id });
+    }
+  };
+
   return (
-    <SafeAreaView edges={['bottom']}>
     <TouchableOpacity
       style={styles.card}
-      activeOpacity={0.8}
-      onPress={onPress}
+      activeOpacity={0.85}
+      onPress={handlePress}
     >
       <View style={styles.inner}>
         <Image source={{ uri: image }} style={styles.image} />
@@ -46,54 +54,44 @@ const CompaniesCard: React.FC<CompaniesCardProps> = ({
             {title}
           </Text>
 
-
-          {type && <Text style={styles.campany}>{type}</Text>}
-
-
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: -25 }}>
-            {/* <Ionicons name="location-outline" color="#a6a6a6" size={15} />
-
-           {city && <Text style={styles.campany}>{city}</Text>} */}
-          
-          
-          </View>
-          <View style={{right: -225, top: -4}}>
-          <Ionicons onPress={()=>navigation.navigate('CompaniesScreen' as never)}
-          name="chevron-forward-outline" size={25} color={'#c4c4c4'}/></View>
+          {type && <Text style={styles.company}>{type}</Text>}
+          {city && <Text style={styles.city}>{city}</Text>}
         </View>
+
+        <Ionicons
+          name="chevron-forward-outline"
+          size={24}
+          color="#c4c4c4"
+        />
       </View>
     </TouchableOpacity>
-    </SafeAreaView>
   );
 };
 
 export default CompaniesCard;
 
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    overflow: "hidden",
+    borderRadius: 10,
     marginHorizontal: 8,
-    marginVertical: 2,
+    marginVertical: 6,
     elevation: 3,
-    width: 350,
-    alignSelf: "center",
-    height: 80,
     borderColor: "#e5e5e5",
     borderWidth: 1,
+
   },
   inner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
+    padding: 10,
   },
   image: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginRight: 18,
-    marginTop: 0
+    marginRight: 16,
   },
   textContainer: {
     flex: 1,
@@ -101,12 +99,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#333",
   },
-  campany: {
+  company: {
     fontSize: 13,
-    color: "#a6a6a6",
-    marginTop: 3,
-  }
+    color: "#777",
+    marginTop: 2,
+  },
+  city: {
+    fontSize: 12,
+    color: "#aaa",
+    marginTop: 2,
+  },
 });

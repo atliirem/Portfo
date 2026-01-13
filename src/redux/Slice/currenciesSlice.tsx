@@ -1,5 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getCurrencies } from "../../../api";
 
 interface Currency {
@@ -14,6 +13,7 @@ interface CurrencyState {
   loading: boolean;
   error: string | null;
   selectedCurrencyId: number | null;
+  selectedCurrencyCode: string | null; // ✅ Filtreleme için eklendi
 }
 
 const initialState: CurrencyState = {
@@ -21,17 +21,41 @@ const initialState: CurrencyState = {
   loading: false,
   error: null,
   selectedCurrencyId: null,
+  selectedCurrencyCode: null,
 };
 
 const currenciesSlice = createSlice({
   name: "currencies",
   initialState,
   reducers: {
-    setSelectedCurrency: (state, action: PayloadAction<number>) => {
+    // ✅ ID ile seçim (mevcut - form için)
+    setSelectedCurrency: (state, action: PayloadAction<number | null>) => {
       state.selectedCurrencyId = action.payload;
+      // Code'u da güncelle
+      if (action.payload) {
+        const currency = state.data.find((c) => c.id === action.payload);
+        state.selectedCurrencyCode = currency?.code || null;
+      } else {
+        state.selectedCurrencyCode = null;
+      }
+    },
+    // ✅ Code ile seçim (filtreleme için)
+    setSelectedCurrencyCode: (state, action: PayloadAction<string | null>) => {
+      state.selectedCurrencyCode = action.payload;
+      // ID'yi de güncelle
+      if (action.payload) {
+        const currency = state.data.find((c) => c.code === action.payload);
+        state.selectedCurrencyId = currency?.id || null;
+      } else {
+        state.selectedCurrencyId = null;
+      }
+    },
+
+    clearSelectedCurrency: (state) => {
+      state.selectedCurrencyId = null;
+      state.selectedCurrencyCode = null;
     },
   },
-
   extraReducers: (builder) => {
     builder
       .addCase(getCurrencies.pending, (state) => {
@@ -42,12 +66,17 @@ const currenciesSlice = createSlice({
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(getCurrencies.rejected, (state, action: PayloadAction<any>) => {
+      .addCase(getCurrencies.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { setSelectedCurrency } = currenciesSlice.actions;
+export const { 
+  setSelectedCurrency, 
+  setSelectedCurrencyCode, 
+  clearSelectedCurrency 
+} = currenciesSlice.actions;
+
 export default currenciesSlice.reducer;

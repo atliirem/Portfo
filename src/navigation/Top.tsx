@@ -4,7 +4,7 @@ import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import LogoSmall from "../components/LogoSmall";
 import { StatusBar } from 'react-native';
-import Ionicons from "react-native-vector-icons/Ionicons";
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 
 export default function Top() {

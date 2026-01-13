@@ -60,6 +60,7 @@ const Pass = () => {
    
         <TouchableOpacity onPress={() => setCurrencyModalVisible(true)}>
           <TextInputUser
+                   
                       isModal
                       placeholder="Para birimi seç"
                       value={pass.currency || ""}
@@ -113,6 +114,8 @@ const Pass = () => {
         >
           <View style={{ width: "48%" }}>
             <TextInputUser
+            keyboardType="numeric"
+            inputMode="decimal" 
               placeholder="Pass fiyatı"
               value={pass.passPrice || ""}
               onChangeText={(text) => dispatch(setPass({ passPrice: text }))}
@@ -121,6 +124,8 @@ const Pass = () => {
 
           <View style={{ width: "48%" }}>
             <TextInputUser
+            keyboardType="numeric"
+            inputMode="decimal" 
               placeholder="Satış Fiyatı"
               value={pass.salePrice || ""}
               onChangeText={(text) => dispatch(setPass({ salePrice: text }))}

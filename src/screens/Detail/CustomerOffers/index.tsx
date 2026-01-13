@@ -4,6 +4,7 @@ import {
   StyleSheet,
   FlatList,
   Text,
+  ActivityIndicator,
   
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { AppDispatch, RootState } from "../../../redux/store";
-import { getOffers } from "../../../../api";
+import { getProposals, } from "../../../../api";
 import OffersCard from "../../../components/Cards/OffersCard";
 import { RootStackParamList } from "../../../navigation/RootStack";
 
@@ -26,24 +27,27 @@ export const CustomerOffers: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
 
   const {
-    offerList,
-    loadingOffers,
-    errorOffers,
+    proposalsList,
+    loadingProposals,
+    errorProposals,
   } = useSelector((state: RootState) => state.offers);
 
   useEffect(() => {
-    dispatch(getOffers());
+    dispatch(getProposals());
   }, [dispatch]);
 
   const renderCard = ({ item }: any) => (
     <OffersCard
       id={item.id}
-      title={item.title}
+      title={item.customer?.name || `Teklif #${item.id}`}
+    
       created_at={item.created_at}
       status={item.status}
-      company={item.company}
+      company={item.customer?.name}
+      property_count={item.property_count}
       onPress={() =>
-        navigation.navigate("OfffersDetail", { id: item.id })
+        navigation.navigate("OfffersDetail", { id: item.id,
+})
       }
     />
   );
@@ -58,37 +62,35 @@ export const CustomerOffers: React.FC = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={styles.container}>
         <Text style={styles.header}>Müşteriye Giden Teklifler</Text>
-       
 
-        {loadingOffers ? (
-          renderEmpty("Yükleniyor...")
-        ) : errorOffers ? (
-          renderEmpty(errorOffers)
-        ) : offerList.length === 0 ? (
+        {loadingProposals ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#25C5D1" />
+          </View>
+        ) : errorProposals ? (
+          renderEmpty(errorProposals)
+        ) : proposalsList.length === 0 ? (
           renderEmpty("Henüz teklif bulunamadı")
         ) : (
           <FlatList
-            data={offerList}
+            data={proposalsList}
             keyExtractor={(item) => String(item.id)}
             renderItem={renderCard}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
           />
         )}
-   
       </View>
     </SafeAreaView>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
-    marginTop: -70,
+    marginTop: -40,
   },
   header: {
     fontSize: 18,

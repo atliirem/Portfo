@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TouchableOpacity,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import Ionicons from "@react-native-vector-icons/ionicons";
 
 type Props = {
   value: string;
@@ -17,8 +17,10 @@ type Props = {
   secureTextEntry?: boolean;
   isModal?: boolean;
   modalIconName?: string;
-  error?: boolean;  
-} & Omit<TextInputProps, "onChangeText" | "value" | "placeholder">;
+  error?: boolean;
+  multiline?: boolean;
+
+} & Omit<TextInputProps, "onChangeText" | "value" | "placeholder" | "multiline">;
 
 const TextInputUser: React.FC<Props> = ({
   value,
@@ -27,8 +29,9 @@ const TextInputUser: React.FC<Props> = ({
   containerStyle,
   secureTextEntry = false,
   isModal = false,
-  modalIconName = "chevron-forward-outline",
+  modalIconName = "chevron-down",
   error = false,
+  multiline = false,
   ...rest
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -37,27 +40,33 @@ const TextInputUser: React.FC<Props> = ({
     <View
       style={[
         styles.container,
+        multiline && styles.multilineContainer,
+        error && styles.errorBorder,
         containerStyle,
-        error ? styles.errorBorder : null,  
       ]}
     >
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#B8C2CC"
-        style={styles.input}
+        placeholderTextColor="#999"
+        style={[
+          styles.input,
+          multiline && styles.multilineInput,
+        ]}
         autoCapitalize="none"
         secureTextEntry={secureTextEntry && !isPasswordVisible}
+        multiline={multiline}
+        textAlignVertical={multiline ? "top" : "center"}
         {...rest}
       />
 
       {isModal && (
         <Ionicons
           name={modalIconName}
-          size={22}
-          color="#94A3B8"
-          style={{ marginLeft: 8 }}
+          size={20}
+          color="#666"
+          style={styles.modalIcon}
         />
       )}
 
@@ -65,11 +74,12 @@ const TextInputUser: React.FC<Props> = ({
         <TouchableOpacity
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           style={styles.iconBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons
             name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
             size={22}
-            color="#94A3B8"
+            color="#666"
           />
         </TouchableOpacity>
       )}
@@ -83,23 +93,38 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 56,
+    minHeight: 56,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E6E9EE",
-    backgroundColor: "#FFFFFF",
+    borderColor: "#E0E0E0",
+    backgroundColor: "#F8F9FA",
     paddingHorizontal: 16,
+  },
+  multilineContainer: {
+    minHeight: 120,
+    alignItems: "flex-start",
+    paddingVertical: 12,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: "#0F172A",
+    fontSize: 15,
+    color: "#333",
+    paddingVertical: 0,
+  },
+  multilineInput: {
+    minHeight: 96,
+    textAlignVertical: "top",
+  },
+  modalIcon: {
+    marginLeft: 8,
   },
   iconBtn: {
     marginLeft: 8,
+    padding: 4,
   },
   errorBorder: {
-    borderColor: "red",
-    borderWidth: 2,
+    borderColor: "#FF4444",
+    borderWidth: 1.5,
+    backgroundColor: "#FFF5F5",
   },
 });

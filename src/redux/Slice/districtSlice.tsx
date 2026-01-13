@@ -1,6 +1,7 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getDistrict } from "../../../api/filterThunk";
+import { getDistrict } from "../../../api";
+
 
 interface DistrictState {
   data: any[];

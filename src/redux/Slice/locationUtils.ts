@@ -1,5 +1,5 @@
 import { setSelectedCountry } from "./countrySlice";
-import { setSelectedCity } from "./filterSlice";
+import { setSelectedCity } from "./citySlice";
 import { setSelectedDistrict } from "./districtSlice";
 import { setSelectedStreet } from "./streetsSlice";
 

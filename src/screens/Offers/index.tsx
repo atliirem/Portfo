@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ComponentButton } from '../../components/Buttons/componentsButton';
-import MyOffers from '../../components/OffersComponents/MyOffers';
-import SentOffers from '../../components/OffersComponents/SentOffers';
+import MyOffers from '../../components/OffersComponents/OffersDetailComponent/MyOffers/MyOffers';
+import SentOffers from '../../components/OffersComponents/SentOffers/SentOffers';
 
 
 export default function OffersScreen() {

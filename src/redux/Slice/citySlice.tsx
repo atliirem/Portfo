@@ -1,6 +1,6 @@
-// src/redux/slice/citySlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getCities } from "../../../api/filterThunk";
+import { getCities } from "../../../api";
+
 
 interface CityState {
   data: any[];
@@ -23,6 +23,10 @@ const citySlice = createSlice({
     setSelectedCity: (state, action: PayloadAction<string | null>) => {
       state.selectedCity = action.payload;
     },
+    clearCities: (state) => {
+      state.data = [];
+      state.selectedCity = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -41,7 +45,5 @@ const citySlice = createSlice({
   },
 });
 
-export const { setSelectedCity } = citySlice.actions;
+export const { setSelectedCity, clearCities } = citySlice.actions;
 export default citySlice.reducer;
-
-

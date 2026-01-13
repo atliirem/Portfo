@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getTypes } from "../../../api";
 
-
 export interface FeatureOption {
   id: number;
   title: string;
@@ -23,7 +22,7 @@ export interface FeatureDetails {
 export interface Feature {
   id: number;
   title: string;
-  type: string;              
+  type: string;
   details: FeatureDetails;
   options: FeatureOption[] | null;
 }
@@ -35,38 +34,43 @@ export interface Category {
   presetFeatures?: Feature[];
 }
 
-
+interface TypeTitle {
+  id: number;
+  label: string;
+  parent?: string;
+  features?: Feature[];
+}
 
 interface TypeState {
   data: Category[];
-  titles: { id: number; label: string; parent?: string }[];
-  features: Feature[]; 
+  titles: TypeTitle[];
+  features: Feature[];
   loading: boolean;
   error: string | null;
-  selectedTypes: string[];
+  selectedTypes: number[]; // ✅ string[] → number[]
 }
 
 const initialState: TypeState = {
   data: [],
   titles: [],
-  features: [],      
+  features: [],
   loading: false,
   error: null,
   selectedTypes: [],
 };
 
-
 const extractTitles = (
   categories: Category[],
   parent?: string
-): { id: number; label: string; parent?: string }[] => {
-  let titles: { id: number; label: string; parent?: string }[] = [];
+): TypeTitle[] => {
+  let titles: TypeTitle[] = [];
 
   categories.forEach((item) => {
     titles.push({
       id: item.id,
       label: item.title,
       parent,
+      features: item.presetFeatures || [],
     });
 
     if (item.childrens?.length) {
@@ -77,17 +81,14 @@ const extractTitles = (
   return titles;
 };
 
-
 const extractFeatures = (categories: Category[]): Feature[] => {
   let list: Feature[] = [];
 
   categories.forEach((item) => {
-  
     if (item.presetFeatures?.length) {
       list = list.concat(item.presetFeatures);
     }
 
-   
     if (item.childrens?.length) {
       list = list.concat(extractFeatures(item.childrens));
     }
@@ -96,13 +97,12 @@ const extractFeatures = (categories: Category[]): Feature[] => {
   return list;
 };
 
-
-
 const typesSlice = createSlice({
   name: "types",
   initialState,
   reducers: {
-    setSelectedTypes: (state, action: PayloadAction<string[]>) => {
+    // ✅ number[] olarak güncellendi
+    setSelectedTypes: (state, action: PayloadAction<number[]>) => {
       state.selectedTypes = action.payload;
     },
     clearSelectedTypes: (state) => {
@@ -115,19 +115,12 @@ const typesSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        getTypes.fulfilled,
-        (state, action: PayloadAction<Category[]>) => {
-          state.loading = false;
-          state.data = action.payload;
-
-         
-          state.titles = extractTitles(action.payload);
-
-          
-          state.features = extractFeatures(action.payload);
-        }
-      )
+      .addCase(getTypes.fulfilled, (state, action: PayloadAction<Category[]>) => {
+        state.loading = false;
+        state.data = action.payload;
+        state.titles = extractTitles(action.payload);
+        state.features = extractFeatures(action.payload);
+      })
       .addCase(getTypes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

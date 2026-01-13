@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { ComponentButton } from "../../components/Buttons/componentsButton";
-import MyOffers from "../../components/OffersComponents/MyOffers";
-import SentOffers from "../../components/OffersComponents/SentOffers";
-import SummaryComponents from "../../components/SummaryComponents"
-import ProposalsComponents from "../../components/ProposalsComponents";
+import { ComponentButton } from "../../../components/Buttons/componentsButton";
+import SummaryComponents from "../../../components/SummaryComponents";
+import ProposalsComponents from "../../../components/ProposalsComponents";
+
 
 
 

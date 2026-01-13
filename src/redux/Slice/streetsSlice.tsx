@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getStreet } from "../../../api/filterThunk";
+import { getStreet } from "../../../api";
 
 interface StreetsState {
   data: any[];

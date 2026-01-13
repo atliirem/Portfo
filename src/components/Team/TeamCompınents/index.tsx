@@ -56,7 +56,7 @@ const TeamScreen: React.FC = () => {
 );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={styles.safeArea} >
       <View style={styles.container}>
       <ProfileButton label="Kullanıcı Davetiyeleri" bg="#c4c4c4" height={40} marginTop={5}/>
         <FlatList
@@ -75,11 +75,11 @@ const TeamScreen: React.FC = () => {
 export default TeamScreen;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
+  safeArea: { flex: 1, backgroundColor: "#fff", },
   container: {
     flex: 1,
     paddingHorizontal: 10,
-    marginTop: -10,
+    marginTop: 0,
     
   },
   header: {

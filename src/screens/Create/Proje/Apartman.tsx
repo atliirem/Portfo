@@ -27,27 +27,29 @@ import {
   setProject,
   addPriceOption,
   updatePriceOption,
-} from "../../../redux/Slice/formSlice"
+  setLicenceFile,
+} from "../../../redux/Slice/formSlice";
+import FilePicker, { SelectedFile } from "../../../components/UploadFile/FileUploadExample";
 
 const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
 
- 
   const createAdData = useAppSelector((state) => state.form);
   const { data: currencies, loading: currenciesLoading, error: currenciesError } =
     useAppSelector((state) => state.currencies);
   const { features } = useAppSelector((state) => state.types);
 
-
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [roomModalVisible, setRoomModalVisible] = useState(false);
-
+  const [licenceFile, setLicenceFileState] = useState<SelectedFile | null>(
+    createAdData.licenceFile || null
+  );
 
   const [errors, setErrors] = useState({
     room: false,
     min: false,
     max: false,
-    
+    currency: false,
   });
 
   const roomFeature = features.find((f) => f.title === "Oda Sayısı");
@@ -57,6 +59,12 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
     dispatch(getCurrencies());
   }, [dispatch]);
 
+
+  useEffect(() => {
+    if (createAdData.licenceFile) {
+      setLicenceFileState(createAdData.licenceFile);
+    }
+  }, [createAdData.licenceFile]);
 
   const handleRoomSelect = (roomTitle: string) => {
     dispatch(setProject({ roomCount: roomTitle }));
@@ -117,22 +125,25 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
     );
   };
 
+  const handleFileSelect = (file: SelectedFile | null) => {
+    setLicenceFileState(file);
+    dispatch(setLicenceFile(file));
+  };
 
-  const validateVilla = () => {
+  const validate = () => {
     const newErrors = {
       room: createAdData.project.roomCount.trim() === "",
       min: createAdData.project.min.trim() === "",
       max: createAdData.project.max.trim() === "",
-     // currency: createAdData.price.currency.trim() === "",
+      currency: createAdData.price.currency.trim() === "",
     };
 
     setErrors(newErrors);
-
     return !Object.values(newErrors).includes(true);
   };
 
   useEffect(() => {
-    onValidate(() => validateVilla());
+    onValidate(() => validate());
   }, [
     createAdData.project.roomCount,
     createAdData.project.min,
@@ -145,9 +156,8 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Proje Villa</Text>
+          <Text style={styles.sectionHeader}>Proje Apartman</Text>
 
-          
           <TouchableOpacity
             onPress={() => setRoomModalVisible(true)}
             style={{ marginTop: 10 }}
@@ -157,7 +167,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
               placeholder="Oda sayısı seç"
               value={createAdData.project.roomCount}
               editable={false}
-              error={errors.room}
+              containerStyle={errors.room ? styles.errorInput : undefined}
               onChangeText={() => {}}
             />
           </TouchableOpacity>
@@ -170,7 +180,6 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             onSelect={(item) => handleRoomSelect(item.title)}
           />
 
-
           <View style={styles.textInput}>
             <TextInputUser
               placeholder="Metrekare (m2) min"
@@ -181,7 +190,6 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             />
           </View>
 
-          
           <View style={styles.textInput}>
             <TextInputUser
               placeholder="Metrekare (m2) max"
@@ -191,7 +199,6 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
               onChangeText={handleMaxChange}
             />
           </View>
-
 
           <View style={{ marginTop: 15 }}>
             <Text style={styles.sectionHeader}>Fiyat Bilgileri</Text>
@@ -207,7 +214,6 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
               />
             </TouchableOpacity>
           </View>
-
 
           <Modal
             isVisible={currencyModalVisible}
@@ -275,18 +281,17 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             </View>
           </View>
 
-
+          {/* Yetki Belgesi */}
           <View style={{ marginTop: 20 }}>
             <Text style={styles.sectionHeader}>Yetki Belgesi</Text>
 
-            <TouchableOpacity>
-              <TextInputUser
-                isModal={true}
-                placeholder="Dosya Seçin"
-                value=""
-                onChangeText={() => {}}
-              />
-            </TouchableOpacity>
+            <FilePicker
+              placeholder="Yetki belgesi seçin (PDF veya Resim)"
+              value={licenceFile}
+              onFileSelect={handleFileSelect}
+              allowedTypes={["pdf", "image"]}
+              maxFileSize={5}
+            />
 
             <View style={styles.info}>
               <Text style={styles.infoText}>
@@ -299,7 +304,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
               onPress={handleDownloadPress}
               style={styles.buttonnewORANGE}
             >
-              <Text style={styles.buttonText}>İNDİR</Text>
+              <Text style={styles.buttonText}>ŞABLON İNDİR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -312,24 +317,19 @@ export default Apartman;
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#fff" },
-
   section: { marginTop: 10 },
-
   sectionHeader: {
     fontSize: 16,
     fontWeight: "800",
     color: "#25C5D1",
     marginBottom: 10,
   },
-
   textInput: { marginTop: 12 },
-
   errorInput: {
     borderWidth: 1.5,
     borderColor: "red",
     borderRadius: 8,
   },
-
   modal: { margin: 0, justifyContent: "flex-end" },
   modalContainer: {
     backgroundColor: "white",
@@ -343,27 +343,23 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textAlign: "center",
   },
-
   categoryItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
-
   info: {
     backgroundColor: "#fff4cd",
     padding: 10,
     borderRadius: 6,
     marginTop: 10,
   },
-
   infoText: {
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
     color: "#1b1a16",
   },
-
   buttonnew: {
     width: "100%",
     backgroundColor: "#25C5D1",
@@ -373,7 +369,6 @@ const styles = StyleSheet.create({
     borderRadius: 6.5,
     marginTop: 15,
   },
-
   buttonnewORANGE: {
     width: "100%",
     backgroundColor: "#ffca63",
@@ -383,13 +378,11 @@ const styles = StyleSheet.create({
     borderRadius: 6.5,
     marginTop: 15,
   },
-
   buttonText: {
     color: "#fff",
     fontWeight: "900",
     fontSize: 13,
   },
-
   input: {
     width: "100%",
     marginTop: 10,

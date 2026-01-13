@@ -1,5 +1,4 @@
-import Ionicons from "react-native-vector-icons/Ionicons";
-
+import Ionicons from "@react-native-vector-icons/ionicons";
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 
@@ -34,9 +33,7 @@ const PersonalCard: React.FC<PersonalCardProps> = ({ personal }) => {
       
         <Text style={styles.name}>{personal.name}</Text>
 
-     
 
-        
         <View style={styles.row}>
           <Ionicons name="call-outline" size={13} color="#000" />
           <Text style={styles.infoText}>
@@ -77,8 +74,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     padding: 16,
 
+
     alignItems: "center",
     justifyContent: "center",
+    
 
     elevation: 3,
     shadowColor: "#000",

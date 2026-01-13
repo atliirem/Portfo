@@ -14,6 +14,7 @@ export default function Price() {
   
       <View style={styles.wrapper}>
         <PriceComponentsButton
+        
           label="Pass Fiyatı"
           isSelected={activeTab === "pass"}
           height={50}

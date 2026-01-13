@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 
-import MyOffers from '../../components/OffersComponents/MyOffers';
-import SentOffers from '../../components/OffersComponents/SentOffers';
+import MyOffers from '../../components/OffersComponents/OffersDetailComponent/MyOffers/MyOffers';
+import SentOffers from '../../components/OffersComponents/SentOffers/SentOffers';
 import PropertiesScreenProfile from "../../screens/Detail/DetailPropertiesProfile"
 import {CustomerOffers} from "../../screens/Detail/CustomerOffers"
 import TeamScreen from "../../components/Team/TeamCompınents"

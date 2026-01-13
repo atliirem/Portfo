@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   FlatList,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import TextInputUser from "../../components/TextInput/TextInputUser";
 import Modal from "react-native-modal";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
@@ -16,11 +17,13 @@ import { getTypes } from "../../../api";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import TextInputUser from "../../components/TextInput/TextInputUser";
 
 import {
   setTitle,
   setCategory,
   setSubCategory,
+  setPropertyId,
 } from "../../redux/Slice/formSlice";
 
 import Location from "./Location";
@@ -29,29 +32,30 @@ import ArsaModal from "./ArsaModal";
 import Apartman from "./Proje/Apartman";
 import Villa from "./Proje/Villa";
 
+import { createProperty } from "../../../api/CreateThunk";
+import { mapStateToFormData } from "../../redux/Slice/mapStateToFormData";
+
 type RootStackParamList = {
   Second: undefined;
 };
 
 const Create = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-
-  const createAdData = useAppSelector((state) => state.form);
-  const { titles: categories } = useAppSelector((state) => state.types);
-
+  const form = useAppSelector((s) => s.form);
+  const { titles: categories } = useAppSelector((s) => s.types);
 
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const [errors, setErrors] = useState({
     title: false,
     category: false,
     subCategory: false,
   });
-
 
   const villaValidatorRef = useRef<(() => boolean) | null>(null);
   const apartmanValidatorRef = useRef<(() => boolean) | null>(null);
@@ -60,38 +64,9 @@ const Create = () => {
     dispatch(getTypes());
   }, [dispatch]);
 
-
-  const validateFields = () => {
-    const newErrors = {
-      title: createAdData.title.trim() === "",
-      category: createAdData.selectedCategory.trim() === "",
-      subCategory:
-        createAdData.selectedCategoryId === 29
-          ? createAdData.selectedSubCategory.trim() === ""
-          : false,
-    };
-
-    setErrors(newErrors);
-
-
-    if (createAdData.selectedSubCategoryId === 34 && villaValidatorRef.current) {
-      if (!villaValidatorRef.current()) return false;
-    }
-
-
-    if (createAdData.selectedSubCategoryId === 35 && apartmanValidatorRef.current) {
-      if (!apartmanValidatorRef.current()) return false;
-    }
-
-    return !Object.values(newErrors).includes(true);
-  };
-
-
   const handleTitleChange = (text: string) => {
     dispatch(setTitle(text));
-    if (text.trim() !== "") {
-      setErrors((prev) => ({ ...prev, title: false }));
-    }
+    if (text.trim() !== "") setErrors((prev) => ({ ...prev, title: false }));
   };
 
   const handleCategorySelect = (label: string, id: number) => {
@@ -106,45 +81,115 @@ const Create = () => {
     setSubCategoryModalVisible(false);
   };
 
-  const handleSubmit = () => {
-    if (!validateFields()) {
-      console.log("Validation failed!");
+  const validateFields = () => {
+    const newErrors = {
+      title: form.title.trim() === "",
+      category: form.selectedCategory.trim() === "",
+      subCategory:
+        form.selectedCategoryId === 29 &&
+        form.selectedSubCategory.trim() === "",
+    };
+
+    setErrors(newErrors);
+
+    if (form.selectedSubCategoryId === 34 && villaValidatorRef.current) {
+      if (!villaValidatorRef.current()) return false;
+    }
+
+    if (form.selectedSubCategoryId === 35 && apartmanValidatorRef.current) {
+      if (!apartmanValidatorRef.current()) return false;
+    }
+
+    return !Object.values(newErrors).includes(true);
+  };
+
+const handleSubmit = async () => {
+  if (!validateFields()) return;
+
+  setIsLoading(true);
+
+  try {
+    const formData = mapStateToFormData(form, {});
+
+    console.log("Draft oluşturuluyor...");
+    const response = await createProperty(formData);
+
+    console.log("Create API yanıtı:", response);
+
+    if (response?.status !== "success") {
+      if (response?.data?.errors) {
+        const errorMessages = Object.values(response.data.errors)
+          .flat()
+          .join("\n");
+        Alert.alert("Hata", errorMessages);
+      } else {
+        Alert.alert("Hata", response?.message || "Draft oluşturulamadı!");
+      }
       return;
     }
 
-    console.log("Form submitted with data:", createAdData);
+    const propertyId = response?.data?.property?.id;
+
+    if (!propertyId) {
+      Alert.alert("Hata", "Property ID alınamadı!");
+      return;
+    }
+
+  
+    dispatch(setPropertyId(propertyId));
+
+    console.log("Draft oluşturuldu, Property ID:", propertyId);
+
+
     navigation.navigate("Second");
-  };
+
+  } catch (error: any) {
+    console.error("Draft oluşturma hatası:", error);
+
+    if (error?.data?.errors) {
+      const errorMessages = Object.values(error.data.errors)
+        .flat()
+        .join("\n");
+      Alert.alert("Hata", errorMessages);
+    } else {
+      Alert.alert(
+        "Hata",
+        error?.message || "Draft oluşturulurken bir hata oluştu."
+      );
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.sectionHeader}>Temel Bilgiler</Text>
 
-
         <TextInputUser
           placeholder="İlan başlığı girin"
-          value={createAdData.title}
+          value={form.title}
           onChangeText={handleTitleChange}
           error={errors.title}
+          editable={!isLoading}
         />
-
 
         <TouchableOpacity
           onPress={() => setCategoryModalVisible(true)}
           style={{ marginTop: 10 }}
+          disabled={isLoading}
         >
           <TextInputUser
-            isModal={true}
+            isModal
             placeholder="Kategori seç"
-            value={createAdData.selectedCategory}
+            value={form.selectedCategory}
             editable={false}
             error={errors.category}
             onChangeText={() => {}}
           />
         </TouchableOpacity>
 
-  
         <Modal
           isVisible={categoryModalVisible}
           onBackdropPress={() => setCategoryModalVisible(false)}
@@ -152,7 +197,6 @@ const Create = () => {
         >
           <SafeAreaView style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Kategori Seç</Text>
-
             <FlatList
               data={categories.filter((item) => !item.parent)}
               keyExtractor={(item) => item.id.toString()}
@@ -168,23 +212,22 @@ const Create = () => {
           </SafeAreaView>
         </Modal>
 
-     
-        {createAdData.selectedCategoryId === 29 && (
+        {form.selectedCategoryId === 29 && (
           <TouchableOpacity
             onPress={() => setSubCategoryModalVisible(true)}
             style={{ marginTop: 10 }}
+            disabled={isLoading}
           >
             <TextInputUser
-              isModal={true}
+              isModal
               placeholder="Alt kategori seç"
-              value={createAdData.selectedSubCategory}
+              value={form.selectedSubCategory}
               editable={false}
               error={errors.subCategory}
               onChangeText={() => {}}
             />
           </TouchableOpacity>
         )}
-
 
         <Modal
           isVisible={subCategoryModalVisible}
@@ -193,10 +236,9 @@ const Create = () => {
         >
           <SafeAreaView style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Alt Kategori Seç</Text>
-
             <FlatList
               data={categories.filter(
-                (item) => item.parent === createAdData.selectedCategory
+                (item) => item.parent === form.selectedCategory
               )}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
@@ -211,27 +253,32 @@ const Create = () => {
           </SafeAreaView>
         </Modal>
 
-
         <Location />
 
+        {(form.selectedCategoryId === 27 ||
+          form.selectedCategoryId === 21) && <PriceComponents />}
 
-        {createAdData.selectedCategoryId === 27 && <PriceComponents />}
-        {createAdData.selectedCategoryId === 21 && <PriceComponents />}
-        {createAdData.selectedCategoryId === 9 && <ArsaModal />}
-        {createAdData.selectedCategoryId === 10 && <ArsaModal />}
+        {(form.selectedCategoryId === 9 ||
+          form.selectedCategoryId === 10) && <ArsaModal />}
 
-       
-        {createAdData.selectedSubCategoryId === 34 && (
+        {form.selectedSubCategoryId === 34 && (
           <Villa onValidate={(fn) => (villaValidatorRef.current = fn)} />
         )}
 
-        {createAdData.selectedSubCategoryId === 35 && (
+        {form.selectedSubCategoryId === 35 && (
           <Apartman onValidate={(fn) => (apartmanValidatorRef.current = fn)} />
         )}
 
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Devam Et</Text>
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.disabledButton]}
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Devam Et</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -281,7 +328,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
+  disabledButton: {
+    opacity: 0.6,
+  },
 });
-
-
-/// şimdi şöyle: ben bu şekilde validation form ile yapıyordum ilan oluşturma olayını ama apide required, children, multiple gibi bir sürü detay var. apiden gelenlere göre yapmak lazım mesela select= true ise seçmeli bir modal kullanmalıyız, select= false ise normal textinput olmalı gibi gibi her şeyi apiden gelenlere göre yapmalıyız ama nasıl yapacağımı da bilmiyorum. zaten validate form olayını da çok anlamamıştım. Bana çok yardım etmen lazım. 

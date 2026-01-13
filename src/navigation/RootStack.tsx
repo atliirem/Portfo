@@ -4,8 +4,9 @@ import Login from "../screens/Login";
 import SignUp from "../screens/SignUp";
 import AppNavigator from "./Navbar";
 import {DetailAlerts} from "../screens/Detail/DetailAlerts";
-import SummaryScreen from "../screens/CompanySummary"
+
 import Create from "../screens/Create"
+import SummaryScreen from "../screens/Company/CompanySummary";
 
 
 
@@ -14,16 +15,17 @@ export type RootStackParamList = {
   SignUp: undefined;
   App: undefined;
   PropertiesDetailScreen: { id: number };
+  MyPropertiesDetailScreen: { id: number };
   NewsDetailScreen: { id: number };
   PropertiesScreen: { id: number };
   DetailAlertsScreen: undefined;
   SummaryScreen: undefined;
   ProposalsComponents: undefined;
-  PropertiesScreenProfile: {id: number}
+  PropertiesScreenProfile: {id: number};
   Favorite: undefined;
   CustomerScreen: undefined;
   AddNewCustomerModal: undefined;
-  CompaniesScreen: undefined;
+  CompaniesScreen: {id: number};
   CompaniesScreenComponents: {id: number}
   CompanyTeamComponents: {id: number}
   OffersDetail: {id: number}
@@ -34,6 +36,22 @@ export type RootStackParamList = {
   Pass: undefined;
   Komisyon: undefined;
   Second: undefined;
+  Taslak: undefined;
+  EditProperty: { id: number };
+  MySubscriptionsScreen:  {id: number}
+  EditTaslak: undefined;
+  SettingsScreen: undefined;
+  SelectCustomerModal: undefined;
+  FullScreenGallery: undefined;
+  CompanyDetail: {id: undefined}
+  CompanyLoc: {id: number}
+  SentOffersDetail: {id: number}
+  MyOffers: {id: number}
+  ProposalsDetail: undefined;
+  DetailScreen: {id: number, code: number};
+
+  CompanyDetailScreen: {id: number}
+
 
   
 

@@ -6,18 +6,17 @@ import Profile from "../../screens/Profile";
 import EditProfileScreen from "../../screens/Update/EditProfileInfo";
 import ChangePassword from "../../screens/Update/ChangePassword";
 import PropertiesScreenProfile from "../../screens/Detail/DetailPropertiesProfile";
-import MyOffers from "../../components/OffersComponents/MyOffers";
+import MyOffers from "../../components/OffersComponents/OffersDetailComponent/MyOffers/MyOffers";
 import Offers from "../../screens/Offers";
 import Contact from "../../screens/Contact";
 
 
 import {CustomerOffers} from "../../screens/Detail/CustomerOffers";
 
-import SummaryScreen from "../../screens/CompanySummary";
+
 import MyPortfoy from "../../screens/MyPortfoy"
 import CompanyTeamComponents from "../../components/Team/CompanyComponents"
 import OfffersDetail from "../../components/OffersComponents/OffersDetailComponent"
-
 
 
 import TopBar from "../TopBar";
@@ -27,11 +26,26 @@ import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen"
 import Favorite from "../../screens/Favorite";
 
 import GalleryScreen from "../../screens/GalleryScreen";
+import Taslak from "../../screens/Create/Taslak"
 
-
-import OffersDetail from "../../screens/Detail/OffersDetailComponets";
-import CompaniesScreen from "../../screens/Company";
 import Top from "../Top";
+import MyPropertiesDetailScreen from "../../screens/Detail/MyPropertiesDetailScreen";
+import EditProperty from "../../screens/Edit/EditProperty";
+import MySubscriptionsScreen from "../../screens/PackagePortfoy";
+import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
+import SettingsScreen from "../../screens/Create/EditProperty/SettingsScreen";
+import SelectCustomerModal from "../../screens/SelectCustomerModal";
+import CompaniesScreen from "../../screens/Company/CompanyList";
+import Company from "../../screens/Company/CompanyList";
+import CompaniesDetailScreen from "../../screens/Company/CompaniesDetail";
+import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
+import SummaryScreen from "../../screens/Company/CompanySummary";
+import CompanyLoc from "../../screens/Company/CompanyLoc";
+import SentOffersDetail from "../../components/OffersComponents/SentOffers/SentOffersDetail"
+import MyOfferDetail from "../../components/OffersComponents/OffersDetailComponent/MyOffers/MyOffersDetail";
+import ProposalsDetail from "../../screens/ProposalsDetaill/ProposalsDetail";
+import { DetailScreen } from "../../screens/ProposalsDetaill/DetailScreens";
+
 
 export type ProfileStackParamList = {
   Profile: undefined;
@@ -49,11 +63,28 @@ export type ProfileStackParamList = {
   DetailAlerts: undefined;
   MyPortfoy: undefined;
   PropertiesDetailScreen: {id: number}
+  MyPropertiesDetailScreen: {id: number}
   Favorite: undefined;
   CompaniesScreen: {id: number};
   CompanyTeamComponents: {id: number}
   OffersDetail: {id: number}
   OfffersDetail: {id: number}
+  Second: undefined;
+  Taslak: undefined;
+  EditProperty: { id: number };
+  MySubscriptionsScreen: undefined;
+  EditTaslak: undefined;
+  SettingsScreen: undefined;
+  SelectCustomerModal: undefined;
+  SentOffersDetail: {id: number}
+  CompanyLoc: {id: number}
+  MyOffersDetail: {id: number}
+  ProposalsDetail: {id: number, code: number};
+  DetailScreen: {id: number, code: number}
+
+
+CompanyDetailScreen: {id: number}
+
   
   
   
@@ -73,13 +104,43 @@ export default function ProfileStack() {
           header: () => <TopBar />, 
         }}
       />
-     {/* <Stack.Screen
+      <Stack.Screen
         name="CompaniesScreen"
         component={CompaniesScreen}
         options={{
           header: () => <TopBar />, 
         }}
-      />  */}
+      />  
+        <Stack.Screen
+        name="SentOffersDetail"
+        component={SentOffersDetail}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+      <Stack.Screen
+        name="ProposalsDetail"
+        component={ProposalsDetail}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+       <Stack.Screen
+        name="MyOffersDetail"
+        component={MyOfferDetail}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+        <Stack.Screen
+        name="DetailScreen"
+        component={DetailScreen}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+
         <Stack.Screen
         name="OfffersDetail"
         component={OfffersDetail}
@@ -87,9 +148,61 @@ export default function ProfileStack() {
           header: () => <Top />, 
         }}
       />
+       <Stack.Screen
+        name="EditProperty"
+        component={EditProperty}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+       <Stack.Screen
+        name="EditTaslak"
+        component={EditTaslak}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+       <Stack.Screen
+        name="CompanyLoc"
+        component={CompanyLoc}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
       <Stack.Screen
-        name="OffersDetail"
-        component={OffersDetail}
+        name="SettingsScreen"
+        component={SettingsScreen}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+
+
+<Stack.Screen
+        name="SelectCustomerModal"
+        component={SelectCustomerModal}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+
+
+<Stack.Screen
+        name="CompanyDetailScreen"
+        component={CompanyDetailScreen}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+<Stack.Screen
+        name="Company"
+        component={Company}
         options={{
           header: () => <Top />, 
         }}
@@ -105,6 +218,22 @@ export default function ProfileStack() {
         <Stack.Screen
         name="CompanyTeamComponents"
         component={CompanyTeamComponents}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+       <Stack.Screen
+        name="Taslak"
+        component={Taslak}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
+
+<Stack.Screen
+        name="MySubscriptionsScreen"
+        component={MySubscriptionsScreen}
         options={{
           header: () => <Top />, 
         }}
@@ -153,6 +282,7 @@ export default function ProfileStack() {
           header: () => <Top />, 
         }}
       />
+  
       <Stack.Screen
         name="Contact"
         component={Contact}
@@ -172,6 +302,11 @@ export default function ProfileStack() {
         component={PropertiesDetailScreen}
       options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="MyPropertiesDetailScreen"
+        component={MyPropertiesDetailScreen}
+      options={{ headerShown: false }}
+      />
        <Stack.Screen
         name="Favorite"
         component={Favorite}
@@ -179,14 +314,7 @@ export default function ProfileStack() {
           header: () => <TopBar />,
         }}
       />
-      {/* <Stack.Screen
-        name="Company"
-        component={Company}
-        options={{
-          header: () => <TopBar />, 
-        }} 
-      />
-       */}
+   
        
       <Stack.Screen
         name="SummaryScreen"

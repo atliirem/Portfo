@@ -57,7 +57,7 @@ const Profile: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView  style={styles.scrollView}>
 
         <View style={styles.infoBox}>
           {user.avatar && (
@@ -153,6 +153,7 @@ const Profile: React.FC = () => {
                 width={320}
                 height={33}
                 marginTop={4}
+                 onPress={()=> navigation.navigate('MySubscriptionsScreen' as never)}
               />
             </View>
           </View>
@@ -193,7 +194,7 @@ const Profile: React.FC = () => {
         <Text style={styles.sectionHeader}>Kurumsal</Text>
         <AccountItems
           label="Firmalar"
-          onPress={() => navigation.navigate("Company")}
+          onPress={() => navigation.navigate("Company" as never)}
         />
         <AccountItems
           label="İletişim"
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 10,
-    marginTop: -59
+    marginTop: -35
   },
   center: {
     flex: 1,
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#333",
+    color: "#444",
   },
   companyType: {
     fontSize: 14,
@@ -301,4 +302,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
+  scrollView:{
+   paddingBottom: 187,
+  }
+
 });

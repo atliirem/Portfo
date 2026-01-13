@@ -14,10 +14,14 @@ import NewsDetailScreen from "../../screens/Detail/NewsDetailScreen";
  import NewsListScreen from "../../screens/Detail/DetailNews";
  import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
  import GalleryScreen from "../../screens/GalleryScreen"
+ import MyPropertiesDetailScreen from "../../screens/Detail/MyPropertiesDetailScreen"
 
 
 import TopBar from "../TopBar";
 import Top from "../Top";
+import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
+import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
+import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
 
 export interface GalleryImage {
   id: number;
@@ -43,9 +47,19 @@ export type HomeStackParamList = {
  GalleryScreen: {
   images: GalleryImage[]; 
   startIndex: number;
+  MyPropertiesDetailScreen: {id: number};
+
+  FullScreenGallery: {
+    images: { uri: string }[];
+    startIndex: number;
+  };
+
+  CompanyDetailScreen: {id: number}
+  SelectedPropertiesScreen: undefined;
+};
 };
 
-};
+
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -73,9 +87,21 @@ export default function HomeStack() {
         component={PropertiesDetailScreen}
      
           options={{ headerShown: false }}
-      
       />
   
+  <Stack.Screen
+  name="SelectedPropertiesScreen"
+  component={SelectedPropertiesScreen}
+  options={{ title: "Seçilen İlanlar" }}
+/>
+
+      <Stack.Screen
+        name="MyPropertiesDetailScreen"
+        component={MyPropertiesDetailScreen}
+     
+          options={{ headerShown: false }}
+      />
+      
       
        <Stack.Screen
         name="GalleryScreen"
@@ -84,7 +110,15 @@ export default function HomeStack() {
           header: () => <TopBar />,
         }}
       />
+      
      
+       <Stack.Screen
+        name="CompanyDetailScreen"
+        component={CompanyDetailScreen}
+       options={{
+          header: () => <TopBar />,
+        }}
+      />
       
       <Stack.Screen
         name="DetailAlerts"
@@ -135,6 +169,16 @@ export default function HomeStack() {
           header: () => <TopBar />,
         }}
       /> 
+
+      <Stack.Screen
+  name="FullScreenGallery"
+  component={FullScreenGallery}
+  options={{
+    headerShown: false,
+    animation: "fade",
+    presentation: "fullScreenModal",
+  }}
+/>
     </Stack.Navigator>
   );
 }

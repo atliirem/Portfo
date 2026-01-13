@@ -10,7 +10,6 @@ import {
   FlatList,
   ActivityIndicator,
   Linking,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Modal from "react-native-modal";
@@ -19,8 +18,8 @@ import { useAppSelector } from "../../../redux/Hooks";
 import { AppDispatch } from "../../../redux/store";
 import { getTypes, getCurrencies } from "../../../../api";
 import TextInputUser from "../../../components/TextInput/TextInputUser";
-import ChildrenModal from "./ChildrenModal";
 import RoomInputs from "../RoomInputs";
+
 
 
 import {
@@ -28,72 +27,43 @@ import {
   setProject,
   addPriceOption,
   updatePriceOption,
-} from "../../../redux/Slice/formSlice"
+  setLicenceFile,
+} from "../../../redux/Slice/formSlice";
+import FilePicker, { SelectedFile } from "../../../components/UploadFile/FileUploadExample";
 
 const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
 
- 
   const createAdData = useAppSelector((state) => state.form);
-  const { data: currencies, loading: currenciesLoading, error: currenciesError } =
-    useAppSelector((state) => state.currencies);
-  const { features } = useAppSelector((state) => state.types);
-
+  const {
+    data: currencies,
+    loading: currenciesLoading,
+    error: currenciesError,
+  } = useAppSelector((state) => state.currencies);
 
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
-  const [roomModalVisible, setRoomModalVisible] = useState(false);
-
+  const [licenceFile, setLicenceFileState] = useState<SelectedFile | null>(
+    createAdData.licenceFile || null
+  );
 
   const [errors, setErrors] = useState({
     room: false,
     min: false,
     max: false,
-    
+    currency: false,
   });
-
-
-
-  const roomFeature = features.find((f) => f.title === "Oda Sayısı");
 
   useEffect(() => {
     dispatch(getTypes());
     dispatch(getCurrencies());
   }, [dispatch]);
 
-
-  const handleRoomSelect = (roomTitle: string) => {
-    dispatch(setProject({ roomCount: roomTitle }));
-    setErrors((prev) => ({ ...prev, room: false }));
-    setRoomModalVisible(false);
-  };
-
-  const handleMinChange = (text: string) => {
-    if (text === "") {
-      dispatch(setProject({ min: "" }));
-      return;
+  // Redux'tan gelen licenceFile'ı local state'e yükle
+  useEffect(() => {
+    if (createAdData.licenceFile) {
+      setLicenceFileState(createAdData.licenceFile);
     }
-
-    const num = Number(text);
-
-    if (Number.isNaN(num)) {
-      return;
-    }
-
-    if (num < 1) {
-      Alert.alert("Geçersiz değer", "Minimum değer 1 olmalıdır.");
-      return;
-    }
-
-    dispatch(setProject({ min: text }));
-    setErrors((prev) => ({ ...prev, min: false }));
-  };
-
-  const handleMaxChange = (text: string) => {
-    dispatch(setProject({ max: text }));
-    if (text.trim() !== "") {
-      setErrors((prev) => ({ ...prev, max: false }));
-    }
-  };
+  }, [createAdData.licenceFile]);
 
   const handleCurrencySelect = (currencyTitle: string, currencyId: number) => {
     dispatch(
@@ -120,22 +90,25 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
     );
   };
 
+  const handleFileSelect = (file: SelectedFile | null) => {
+    setLicenceFileState(file);
+    dispatch(setLicenceFile(file));
+  };
 
-  const validateVilla = () => {
+  const validate = () => {
     const newErrors = {
       room: createAdData.project.roomCount.trim() === "",
       min: createAdData.project.min.trim() === "",
       max: createAdData.project.max.trim() === "",
-     // currency: createAdData.price.currency.trim() === "",
+      currency: createAdData.price.currency.trim() === "",
     };
 
     setErrors(newErrors);
-
     return !Object.values(newErrors).includes(true);
   };
 
   useEffect(() => {
-    onValidate(() => validateVilla());
+    onValidate(() => validate());
   }, [
     createAdData.project.roomCount,
     createAdData.project.min,
@@ -150,52 +123,7 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Proje Villa</Text>
 
-             <RoomInputs onValidate={(fn) => onValidate(fn)} />
-
-          {/* <TouchableOpacity
-            onPress={() => setRoomModalVisible(true)}
-            style={{ marginTop: 10 }}
-          >
-            <TextInputUser
-              isModal={true}
-              placeholder="Oda sayısı seç"
-              value={createAdData.project.roomCount}
-              editable={false}
-              error={errors.room}
-              onChangeText={() => {}}
-            />
-          </TouchableOpacity>
-
-          <ChildrenModal
-            isVisible={roomModalVisible}
-            onClose={() => setRoomModalVisible(false)}
-            loading={false}
-            options={roomFeature?.options ?? []}
-            onSelect={(item) => handleRoomSelect(item.title)}
-          />
-
-
-          <View style={styles.textInput}>
-            <TextInputUser
-              placeholder="Metrekare (m2) min"
-              keyboardType="numeric"
-              value={createAdData.project.min}
-              containerStyle={errors.min ? styles.errorInput : undefined}
-              onChangeText={handleMinChange}
-            />
-          </View>
-
-          
-          <View style={styles.textInput}>
-            <TextInputUser
-              placeholder="Metrekare (m2) max"
-              value={createAdData.project.max}
-              keyboardType="numeric"
-              containerStyle={errors.max ? styles.errorInput : undefined}
-              onChangeText={handleMaxChange}
-            />
-          </View>
- */}
+          <RoomInputs onValidate={(fn) => onValidate(fn)} />
 
           <View style={{ marginTop: 15 }}>
             <Text style={styles.sectionHeader}>Fiyat Bilgileri</Text>
@@ -211,7 +139,6 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
               />
             </TouchableOpacity>
           </View>
-
 
           <Modal
             isVisible={currencyModalVisible}
@@ -279,18 +206,17 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
             </View>
           </View>
 
-
+          {/* Yetki Belgesi */}
           <View style={{ marginTop: 20 }}>
             <Text style={styles.sectionHeader}>Yetki Belgesi</Text>
 
-            <TouchableOpacity>
-              <TextInputUser
-                isModal={true}
-                placeholder="Dosya Seçin"
-                value=""
-                onChangeText={() => {}}
-              />
-            </TouchableOpacity>
+            <FilePicker
+              placeholder="Yetki belgesi seçin (PDF veya Resim)"
+              value={licenceFile}
+              onFileSelect={handleFileSelect}
+              allowedTypes={["pdf", "image"]}
+              maxFileSize={5}
+            />
 
             <View style={styles.info}>
               <Text style={styles.infoText}>
@@ -303,7 +229,7 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
               onPress={handleDownloadPress}
               style={styles.buttonnewORANGE}
             >
-              <Text style={styles.buttonText}>İNDİR</Text>
+              <Text style={styles.buttonText}>ŞABLON İNDİR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -316,24 +242,19 @@ export default Villa;
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#fff" },
-
   section: { marginTop: 10 },
-
   sectionHeader: {
     fontSize: 16,
     fontWeight: "800",
     color: "#25C5D1",
     marginBottom: 10,
   },
-
   textInput: { marginTop: 12 },
-
   errorInput: {
     borderWidth: 1.5,
     borderColor: "red",
     borderRadius: 8,
   },
-
   modal: { margin: 0, justifyContent: "flex-end" },
   modalContainer: {
     backgroundColor: "white",
@@ -347,27 +268,23 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textAlign: "center",
   },
-
   categoryItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
-
   info: {
     backgroundColor: "#fff4cd",
     padding: 10,
     borderRadius: 6,
     marginTop: 10,
   },
-
   infoText: {
     fontSize: 13,
     fontWeight: "500",
     textAlign: "center",
     color: "#1b1a16",
   },
-
   buttonnew: {
     width: "100%",
     backgroundColor: "#25C5D1",
@@ -377,7 +294,6 @@ const styles = StyleSheet.create({
     borderRadius: 6.5,
     marginTop: 15,
   },
-
   buttonnewORANGE: {
     width: "100%",
     backgroundColor: "#ffca63",
@@ -387,13 +303,11 @@ const styles = StyleSheet.create({
     borderRadius: 6.5,
     marginTop: 15,
   },
-
   buttonText: {
     color: "#fff",
     fontWeight: "900",
     fontSize: 13,
   },
-
   input: {
     width: "100%",
     marginTop: 10,

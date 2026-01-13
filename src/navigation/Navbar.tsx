@@ -13,7 +13,7 @@ import FavoriteStack from "./Navbar/FavoriteStack";
 import ProfileStack from "./Navbar/ProfileStack";
 import AddStackScreen from "./Navbar/AddStack";
 
-import Ionicons from "react-native-vector-icons/Ionicons";
+import Ionicons from "@react-native-vector-icons/ionicons";
 
 
 const Tab = createBottomTabNavigator();

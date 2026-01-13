@@ -1,6 +1,6 @@
-import Ionicons from "react-native-vector-icons/Ionicons";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
+import Ionicons from "@react-native-vector-icons/ionicons";
 
 type Props = {
  

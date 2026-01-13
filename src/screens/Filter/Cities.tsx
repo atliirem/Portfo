@@ -3,8 +3,8 @@ import React, { useEffect } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useAppDispatch, useAppSelector } from "../../redux/Hooks";
-import { setSelectedCity } from "../../redux/Slice/filterSlice"
-import { getCities } from "../../../api/filterThunk";
+import { setSelectedCity } from "../../redux/Slice/citySlice"
+import { getCities } from "../../../api";
 import { SelectCountry } from "react-native-element-dropdown";
 
 

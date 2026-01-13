@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -15,98 +15,195 @@ import { useAppSelector } from "../../../redux/Hooks";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 
-import {
-  resetCreateAd,
-  setPass,
-  setTitle,
-} from "../../../redux/Slice/formSlice";
+import { resetCreateAd, setPass, setTitle } from "../../../redux/Slice/formSlice";
 
 import TextInputUser from "../../../components/TextInput/TextInputUser";
 import Location from "../Location";
 
-import { createProperty, getErrorMessage } from "../../../../api/propertyApi"
+import { PropertyFeatureForm } from "../PropertyForm";
+import { getMyProperties } from "../../../../api";
+import { mapStateToFormData } from "../../../redux/Slice/mapStateToFormData";
+import { updateProperty } from "../../../../api/CreateThunk";
 
 const Second = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
 
   const createAdData = useAppSelector((state) => state.form);
-  
+  const propertyId = createAdData.propertyId;
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFinalSubmit = async () => {
+  const featureFormValidatorRef = useRef<(() => boolean) | null>(null);
+  const featureFormValuesRef = useRef<Record<string, any>>({});
+
+  const validateAll = () => {
+    if (!propertyId) {
+      Alert.alert(
+        "Hata",
+        "Property ID bulunamadı. Lütfen geri dönüp tekrar deneyin."
+      );
+      return false;
+    }
 
     if (!createAdData.title.trim()) {
       Alert.alert("Hata", "Lütfen ilan başlığı girin.");
-      return;
+      return false;
     }
 
     if (!createAdData.selectedCategoryId) {
       Alert.alert("Hata", "Lütfen kategori seçin.");
-      return;
+      return false;
     }
-
 
     if (!createAdData.location.country || !createAdData.location.city) {
-      Alert.alert("Hata", "Lütfen konum bilgilerini doldurun.");
-      return;
+      Alert.alert("Hata", "Lütfen konum seçin.");
+      return false;
     }
 
-
     const hasCommission = createAdData.commission.salePrice !== "";
-    const hasPass = createAdData.pass.passPrice !== "" && createAdData.pass.salePrice !== "";
+    const hasPass =
+      createAdData.pass.passPrice !== "" || createAdData.pass.salePrice !== "";
 
     if (!hasCommission && !hasPass) {
       Alert.alert("Hata", "Lütfen fiyat bilgilerini doldurun.");
-      return;
+      return false;
     }
+
+    if (featureFormValidatorRef.current) {
+      if (!featureFormValidatorRef.current()) {
+        Alert.alert("Hata", "Tüm gerekli özellikleri doldurun.");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!validateAll()) return;
 
     setIsLoading(true);
 
     try {
-      console.log("Gönderilen Veri:", createAdData);
-
-    
-      const response = await createProperty(createAdData);
-
-      console.log("API Yanıtı:", response);
-
-
-      Alert.alert(
-        "Başarılı", 
-        `İlan başarıyla oluşturuldu!\nİlan No: ${response.data.property}`,
-        [
-          {
-            text: "Tamam",
-            onPress: () => {
-              dispatch(resetCreateAd());
-              navigation.goBack();
-            },
-          },
-        ]
+      const formData = mapStateToFormData(
+        createAdData,
+        featureFormValuesRef.current
       );
-    } catch (error: any) {
-      console.error("İlan oluşturma hatası:", error);
-      
-      const errorMessage = getErrorMessage(error);
-      
-      Alert.alert("Hata", errorMessage, [
+
+      // ✅ Debug: FormData içeriğini logla
+      console.log("=== FormData Contents ===");
+      try {
+        for (let pair of (formData as any)._parts) {
+          console.log(pair[0] + ":", pair[1]);
+        }
+      } catch (e) {
+        console.log("FormData log error:", e);
+      }
+
+      console.log("İlan güncelleniyor, Property ID:", propertyId);
+
+      const response = await updateProperty(propertyId!, formData);
+
+      console.log("Update API yanıtı:", JSON.stringify(response, null, 2));
+
+      if (!response || response.status !== "success") {
+        // ✅ Debug: Hata detaylarını logla
+        console.log("=== API Error Response ===");
+        console.log("Response:", JSON.stringify(response, null, 2));
+
+        if (response?.data?.errors) {
+          const errorMessages = Object.entries(response.data.errors)
+            .map(([key, messages]) => {
+              console.log(`Error field: ${key}`, messages);
+              const msgs = Array.isArray(messages)
+                ? messages.join(", ")
+                : messages;
+              return `${key}: ${msgs}`;
+            })
+            .join("\n");
+          Alert.alert("Eksik Bilgiler", errorMessages);
+        } else if (response?.errors) {
+          const errorMessages = Object.entries(response.errors)
+            .map(([key, messages]) => {
+              console.log(`Error field: ${key}`, messages);
+              const msgs = Array.isArray(messages)
+                ? messages.join(", ")
+                : messages;
+              return `${key}: ${msgs}`;
+            })
+            .join("\n");
+          Alert.alert("Eksik Bilgiler", errorMessages);
+        } else {
+          Alert.alert("Hata", response?.message || "İşlem başarısız!");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      const ilanNo = response?.data?.property?.no || "-";
+
+      await dispatch(getMyProperties()).unwrap();
+
+      Alert.alert("Başarılı", `İlan başarıyla güncellendi!\nİlan No: ${ilanNo}`, [
         {
           text: "Tamam",
-          style: "cancel",
+          onPress: () => {
+            dispatch(resetCreateAd());
+            navigation.navigate("PropertiesScreenProfile" as never);
+          },
         },
       ]);
+    } catch (error: any) {
+      // ✅ Debug: Catch bloğunda hata detayları
+      console.log("=== Catch Error Details ===");
+      console.log("Error:", error);
+      console.log("Error response:", error?.response);
+      console.log("Error response data:", JSON.stringify(error?.response?.data, null, 2));
+      console.log("Error data:", JSON.stringify(error?.data, null, 2));
+
+      if (error?.response?.data?.errors) {
+        const errorMessages = Object.entries(error.response.data.errors)
+          .map(([key, messages]) => {
+            console.log(`Error field: ${key}`, messages);
+            const msgs = Array.isArray(messages)
+              ? messages.join(", ")
+              : messages;
+            return `${key}: ${msgs}`;
+          })
+          .join("\n");
+        Alert.alert("Eksik Bilgiler", errorMessages);
+      } else if (error?.data?.errors) {
+        const errorMessages = Object.entries(error.data.errors)
+          .map(([key, messages]) => {
+            console.log(`Error field: ${key}`, messages);
+            const msgs = Array.isArray(messages)
+              ? messages.join(", ")
+              : messages;
+            return `${key}: ${msgs}`;
+          })
+          .join("\n");
+        Alert.alert("Eksik Bilgiler", errorMessages);
+      } else {
+        Alert.alert(
+          "Hata",
+          error?.message || "İşlem sırasında bir hata oluştu."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const currentCurrency =
+    createAdData.pass.currency ||
+    createAdData.price.currency ||
+    createAdData.commission.currency ||
+    "";
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.pageTitle}>İlanı Önizle & Düzenle</Text>
-
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Temel Bilgiler</Text>
 
@@ -117,47 +214,22 @@ const Second = () => {
             editable={!isLoading}
           />
 
-          <InfoEditRow
-            label="Para Birimi"
-            value={createAdData.price.currency}
-            onPress={() => navigation.goBack()}
-          />
-
-          {createAdData.commission.salePrice !== "" && (
-            <>
-              <InfoEditRow
-                label="Satış Fiyatı"
-                value={createAdData.commission.salePrice}
-                onPress={() => navigation.navigate("CommissionScreen" as never)}
-              />
-
-              <InfoEditRow
-                label="Alıcı Komisyon (%)"
-                value={createAdData.commission.buyerRate}
-                onPress={() => navigation.navigate("CommissionScreen" as never)}
-              />
-
-              <InfoEditRow
-                label="Satıcı Komisyon (%)"
-                value={createAdData.commission.sellerRate}
-                onPress={() => navigation.navigate("CommissionScreen" as never)}
-              />
-            </>
-          )}
+          <View style={{ marginTop: 10 }}>
+            <TextInputUser
+              placeholder="Para Birimi"
+              value={currentCurrency}
+              editable={false}
+              onChangeText={() => {}}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
           <Location />
+        </View>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              width: "100%",
-              marginRight: 10,
-              marginTop: 10,
-            }}
-          >
+        {/* <View style={styles.section}>
+          <View style={styles.rowBetween}>
             <TextInputUser
               style={{ width: "48%" }}
               placeholder="Pass Fiyatı"
@@ -166,6 +238,7 @@ const Second = () => {
               keyboardType="numeric"
               editable={!isLoading}
             />
+
             <TextInputUser
               style={{ width: "48%" }}
               placeholder="Satış Fiyatı"
@@ -175,46 +248,21 @@ const Second = () => {
               editable={!isLoading}
             />
           </View>
-        </View>
+        </View> */}
 
-        
-
-        {createAdData.selectedSubCategoryId === 34 ||
-        createAdData.selectedSubCategoryId === 35 ? (
+        {propertyId && (
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Proje Bilgileri</Text>
-
-
-             <TextInputUser
-              style={{ width: "48%" }}
-              placeholder="Satış Fiyatı"
-              value={createAdData.pass.salePrice}
-              onChangeText={(t) => dispatch(setPass({ salePrice: t }))}
-              keyboardType="numeric"
-              editable={!isLoading}
-            />
-
-            <InfoEditRow
-              label="Oda Sayısı"
-              value={createAdData.project.roomCount}
-              onPress={() => navigation.navigate("ProjectScreen" as never)}
-            />
-
-            <InfoEditRow
-              label="Min m²"
-              value={createAdData.project.min}
-              onPress={() => navigation.navigate("ProjectScreen" as never)}
-            />
-
-            <InfoEditRow
-              label="Max m²"
-              value={createAdData.project.max}
-              onPress={() => navigation.navigate("ProjectScreen" as never)}
+            <PropertyFeatureForm
+              propertyTypeId={propertyId}
+              onValidate={(fn) => (featureFormValidatorRef.current = fn)}
+              onValuesChange={(values) => {
+                featureFormValuesRef.current = values;
+              }}
+              disabled={isLoading}
             />
           </View>
-        ) : null}
+        )}
 
-   
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.backButton, isLoading && styles.disabledButton]}
@@ -243,64 +291,28 @@ const Second = () => {
 
 export default Second;
 
-
-const InfoEditRow = ({
-  label,
-  value,
-  onPress,
-}: {
-  label: string;
-  value: string | number | undefined;
-  onPress: () => void;
-}) => (
-  <TouchableOpacity style={styles.infoRow} onPress={onPress}>
-    <Text style={styles.infoLabel}>{label}:</Text>
-    <Text style={styles.infoValue}>{value || "Seçilmedi"}</Text>
-  </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFFF" },
-  scrollContainer: { paddingHorizontal: 20, paddingBottom: 50 },
-
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#333",
-    marginVertical: 20,
-    textAlign: "center",
-  },
+  safeArea: { flex: 1, backgroundColor: "#FFFF", marginTop: 0 },
+  scrollContainer: { paddingHorizontal: 10, paddingBottom: 75 },
 
   section: {
     backgroundColor: "#FFFF",
     padding: 15,
     borderRadius: 12,
-    marginBottom: 15,
+    marginBottom: 10,
   },
 
   sectionHeader: {
     fontSize: 16,
     fontWeight: "700",
     color: "#25C5D1",
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
-  infoRow: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#FFF",
-  },
-
-  infoLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#444",
-  },
-
-  infoValue: {
-    fontSize: 14,
-    color: "#222",
-    marginTop: 3,
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
   },
 
   buttonContainer: {
@@ -308,7 +320,6 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 25,
   },
-
   backButton: {
     flex: 1,
     backgroundColor: "#C4C4C4",
@@ -317,13 +328,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   backButtonText: {
     color: "#666",
     fontWeight: "700",
     fontSize: 16,
   },
-
   submitButton: {
     flex: 1,
     backgroundColor: "#25C5D1",
@@ -332,7 +341,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   submitButtonText: {
     color: "#fff",
     fontWeight: "700",

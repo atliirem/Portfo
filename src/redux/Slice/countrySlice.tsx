@@ -1,6 +1,6 @@
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getCountries } from "../../../api/filterThunk";
+import { getCountries } from "../../../api";
+
 
 interface CountryState {
   data: any[];
@@ -8,6 +8,7 @@ interface CountryState {
   error: string | null;
   selectedCountry: string | null;
 }
+
 const initialState: CountryState = {
   data: [],
   loading: false,
@@ -21,6 +22,10 @@ const countrySlice = createSlice({
   reducers: {
     setSelectedCountry: (state, action: PayloadAction<string | null>) => {
       state.selectedCountry = action.payload;
+    },
+    clearCountry: (state) => {
+      state.data = [];
+      state.selectedCountry = null;
     },
   },
   extraReducers: (builder) => {
@@ -40,5 +45,5 @@ const countrySlice = createSlice({
   },
 });
 
-export const { setSelectedCountry } = countrySlice.actions;
+export const { setSelectedCountry, clearCountry } = countrySlice.actions;
 export default countrySlice.reducer;

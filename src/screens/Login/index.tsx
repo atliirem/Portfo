@@ -25,8 +25,8 @@ const Index = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@pigasoft.com');
+  const [password, setPassword] = useState('12345678');
 
   const { loading, error } = useSelector((state: RootState) => state.auth);
 

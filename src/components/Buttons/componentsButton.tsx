@@ -37,8 +37,7 @@ export const ComponentButton = ({
       onPress={onPress}
     >
       <Text style={[styles.text, { 
-        color: isSelected ? "#ffff" : "#bababe"
-         }]}>{label}</Text>
+        color: isSelected ? "#ffff" : "#bababe"}]}>{label}</Text>
     </TouchableOpacity>
   );
 };
@@ -51,11 +50,15 @@ const styles = StyleSheet.create({
     width: '120%',
     justifyContent: "center",
     alignItems: "center",
+
   },
   text: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#fff"
+    color: "#fff",
+    textAlign: 'center',
+    justifyContent: 'center',
+
   
   },
 });
