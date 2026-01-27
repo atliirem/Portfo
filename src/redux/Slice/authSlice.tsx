@@ -7,7 +7,7 @@ import {
   changePasswordThunk,
   verifyPasswordCodeThunk 
 } from "../../../api";
-import { AuthService } from "../../services/AuthService"
+import { AuthService } from "../../services/AuthService";
 
 export interface User {
   id: number;
@@ -20,6 +20,7 @@ export interface User {
   locale?: { key: string; title: string };
   unread_notifications_count?: number;
   permissions?: string[];
+  company_id?: number;
 }
 
 export interface AuthState {
@@ -66,7 +67,6 @@ const authSlice = createSlice({
       state.verifyCodeSuccess = false;
     },
     setUserFromStorage: (state, action: PayloadAction<User | null>) => {
-      console.log("setUserFromStorage reducer called with:", action.payload?.email || "null");
       state.user = action.payload;
       state.token = action.payload?.token || null;
       state.isInitialized = true; 
@@ -89,11 +89,9 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload?.token || null;
         state.isInitialized = true;
-        console.log("Login successful, user set:", action.payload.email);
         
-
         AuthService.setUser(action.payload).catch(err => 
-          console.error(" AsyncStorage save error:", err)
+          console.error("AsyncStorage save error:", err)
         );
       })
       .addCase(loginThunk.rejected, (state, action) => {
@@ -111,9 +109,7 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload?.token || null;
         state.isInitialized = true;
-        console.log("SignUp successful, user set:", action.payload.email);
         
-
         AuthService.setUser(action.payload).catch(err => 
           console.error("AsyncStorage save error:", err)
         );
@@ -132,11 +128,9 @@ const authSlice = createSlice({
         state.token = null;  
         state.error = null;
         state.isInitialized = true;
-        console.log("Logout successful");
         
-
         AuthService.logout().catch(err => 
-          console.error(" AsyncStorage clear error:", err)
+          console.error("AsyncStorage clear error:", err)
         );
       })
       .addCase(logoutThunk.rejected, (state, action) => {
@@ -145,7 +139,6 @@ const authSlice = createSlice({
         state.token = null; 
         state.error = action.payload as string;
         
-
         AuthService.logout().catch(err => 
           console.error("AsyncStorage clear error:", err)
         );
@@ -192,7 +185,6 @@ const authSlice = createSlice({
         state.error = null;
         state.user = action.payload;
         
-
         if (action.payload.token) {
           AuthService.setUser(action.payload).catch(err => 
             console.error("AsyncStorage update error:", err)

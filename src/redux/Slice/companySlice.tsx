@@ -32,7 +32,7 @@ interface Personal {
   avatar: string;
   name: string;
   locale: string;
-  roles: { id: number; title: string; key: string }[];
+  roles?: { id: number; title: string; company_id?: number }[];
   contacts_can_visible: boolean;
   contacts: {
     phone: { code: string; number: string | null };

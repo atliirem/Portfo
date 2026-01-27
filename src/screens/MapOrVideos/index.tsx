@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   videoPlaceholder: {
-    height: 60,
-    backgroundColor: '#f5f5f5',
+    height: 100,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 12,
@@ -108,5 +108,6 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#999',
     fontSize: 14,
+    marginTop: -70
   },
 });

@@ -22,7 +22,6 @@ import PropertiesButton from "../../../components/Buttons/PropertiesButton";
 import MyPropertiesButton from "../../../components/Buttons/MyPropertiesButton";
 import { BannerDetail } from "../../../components/Banner/BannerDetail";
 import MapOrVideos from "../../MapOrVideos";
-import TaslakInfo from "../../Create/Components/TaslakInfo";
 import { getAllCompanies, getProperties } from "../../../../api";
 import {
   setDetailFeatures,
@@ -44,8 +43,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { company } = useSelector((state: RootState) => state.company);
 
   const [retryCount, setRetryCount] = useState(0);
-  
-
   const [fetchedProperty, setFetchedProperty] = useState<any>(null);
 
   useEffect(() => {
@@ -60,7 +57,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         try {
           const result = await dispatch(getProperties(id)).unwrap();
           
-          // Tüm property verisini kaydet
           if (result) {
             setFetchedProperty(result);
           }
@@ -102,17 +98,26 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     latestList.find((p) => p.id === id);
 
   const detailItem = property && property.id === id ? property : null;
-  
-
   const displayItem = fetchedProperty || detailItem || previewItem;
 
   const isDraft = displayItem?.status === "draft";
 
   const isMyProperty = (() => {
     if (!displayItem?.company?.id) return false;
-    if (company?.id && displayItem.company.id === company.id) return true;
-    if (user?.company_id && displayItem.company.id === user.company_id) return true;
-    if (myList.some((p) => p.id === id)) return true;
+    
+    if (company?.id && displayItem.company.id === company.id) {
+      return true;
+    }
+    
+    const userCompanyId = user?.roles?.[0]?.company_id;
+    if (userCompanyId && displayItem.company.id === userCompanyId) {
+      return true;
+    }
+    
+    if (myList.some((p) => p.id === id)) {
+      return true;
+    }
+    
     return false;
   })();
 
@@ -131,7 +136,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scroll}>
-
         <View style={styles.imageContainer}>
           <BannerPhoto id={id} />
           <View style={styles.iconContainer}>
@@ -144,8 +148,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
 
         <View style={styles.contentSection}>
-        
-
           <Text style={styles.title}>{displayItem.title}</Text>
 
           <View style={styles.locationRow}>
@@ -164,7 +166,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             )}
           </View>
 
- 
           <View style={styles.priceContainer}>
             <View style={styles.priceHeaderRow}>
               <Text style={styles.priceLabel}>Pass Fiyatı</Text>
@@ -180,7 +181,7 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             </View>
           </View>
 
- {isDraft && (
+          {isDraft && (
             <View style={styles.draftInfoBox}>
               <Text style={styles.draftInfoText}>
                 Bu ilan taslak durumunda olduğu için özellikler görüntülenmiyor.
@@ -191,7 +192,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
           <BannerDetail id={id} isDraft={isDraft} />
 
-
           {displayItem?.map && (
             <MapOrVideos
               locationData={displayItem.map}
@@ -199,10 +199,6 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               editable={false}
             />
           )}
-
-  
-    
-
 
           {displayItem.company && (
             <TouchableOpacity

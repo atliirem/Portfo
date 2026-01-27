@@ -316,7 +316,6 @@ const GalleryScreen: React.FC<Props> = (props) => {
     </Modal>
   );
 
-  // Property yüklenene kadar hiçbir şey gösterme
   if (!isPropertyLoaded) {
     return null;
   }
