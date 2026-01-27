@@ -7,10 +7,9 @@ const api = axios.create({
   baseURL: 'https://portfoy.demo.pigasoft.com/api',
   headers: {
     Accept: 'application/json',
-    'Content-Type': 'application/json',
+    
   },
 });
-
 
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('@TOKEN');

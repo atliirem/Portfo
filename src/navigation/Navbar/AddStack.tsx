@@ -9,7 +9,9 @@ import Second from "../../screens/Create/Second";
 import Taslak from "../../screens/Create/Taslak"
 import PropertiesScreenProfile from "../../screens/Detail/DetailPropertiesProfile";
 import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen"
-import MyPropertiesDetail from "../../screens/Detail/MyPropertiesDetailScreen";
+
+import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
+import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
 
 
 export type AddStackParamList = {
@@ -17,11 +19,14 @@ export type AddStackParamList = {
   DetailAlerts: undefined;
   Pass: undefined;
   Komisyon: undefined;
-  Second: undefined;
-  Taslak: undefined;
+  EditTaslak: undefined;
+
   PropertiesScreenProfile: {id: number}
   PropertiesDetailScreen: {id: number}
-  MyPropertiesDetail: {id: number}
+
+  SelectedPropertiesScreen: undefined;
+   Second: undefined;
+  Taslak: { propertyId: number };
 
 
 };
@@ -40,13 +45,14 @@ export default function AddStackScreen() {
         }}
       />
 
-      <Stack.Screen
-        name="MyPropertiesDetail"
-        component={MyPropertiesDetail}
+ <Stack.Screen
+        name="SelectedPropertiesScreen"
+        component={SelectedPropertiesScreen}
         options={{
           header: () => <TopBar />, 
         }}
-      />
+      />  
+  
        <Stack.Screen
         name="Komisyon"
         component={Komisyon}
@@ -61,6 +67,14 @@ export default function AddStackScreen() {
           header: () => <TopBar />, 
         }}
       />
+          <Stack.Screen
+              name="EditTaslak"
+              component={EditTaslak}
+              options={{
+                header: () => <TopBar />, 
+              }}
+            /> 
+      
 
   <Stack.Screen
         name="Taslak"

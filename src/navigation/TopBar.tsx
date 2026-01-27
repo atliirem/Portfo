@@ -7,7 +7,6 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import SelectCustomerModal from '../screens/SelectCustomerModal';
 import { getCustomer, getProperties } from '../utils/offeresStorage';
 
-
 export default function TopTabs() {
   const navigation = useNavigation();
   const [customerModalVisible, setCustomerModalVisible] = useState(false);
@@ -15,44 +14,42 @@ export default function TopTabs() {
   const [propertyCount, setPropertyCount] = useState(0);
 
 
+  const loadData = useCallback(async () => {
+    const customer = await getCustomer();
+    const properties = await getProperties();
+    setSelectedCustomer(customer);
+    setPropertyCount(properties.length);
+  }, []);
+
+
   useFocusEffect(
     useCallback(() => {
-      const checkData = async () => {
-        const customer = await getCustomer();
-        const properties = await getProperties();
-        setSelectedCustomer(customer);
-        setPropertyCount(properties.length);
-      };
-      checkData();
-    }, [])
+      loadData();
+    }, [loadData])
   );
 
-  const handleCustomerSelect = (code: string, name: string) => {
+
+  const handleCustomerSelect = async (code: string, name: string) => {
     console.log("Seçilen müşteri kodu:", code);
     console.log("Seçilen müşteri adı:", name);
+    
+
+    await loadData();
+  };
+
+
+  const handleModalClose = async () => {
+    setCustomerModalVisible(false);
+    
+    setTimeout(() => {
+      loadData();
+    }, 100);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar />
       <View style={styles.container}>
-
-       
-       
-        <TouchableOpacity
-          style={styles.file}
-          onPress={() => setCustomerModalVisible(true)}
-        >
-          <Ionicons 
-            name={selectedCustomer ? "folder" : "folder-outline"} 
-            size={30} 
-            color={selectedCustomer ? "#25C5D1" : "#1a8b95"} 
-          />
-        </TouchableOpacity>
-
-        <LogoSmall />
-
-       
         {selectedCustomer ? (
           <TouchableOpacity
             style={styles.notif}
@@ -70,16 +67,25 @@ export default function TopTabs() {
         ) : (
           <TouchableOpacity
             style={styles.notif}
-            onPress={() => navigation.navigate("DetailAlerts" as never)}
+            onPress={() => setCustomerModalVisible(true)}
           >
-            <Ionicons name="notifications-outline" size={30} color="#1a8b95" />
+            <Ionicons name="folder-outline" size={30} color="#1a8b95" />
           </TouchableOpacity>
         )}
+
+        <LogoSmall />
+
+        <TouchableOpacity
+          style={styles.notif}
+          onPress={() => navigation.navigate("DetailAlerts" as never)}
+        >
+          <Ionicons name="notifications-outline" size={30} color="#1a8b95" />
+        </TouchableOpacity>
       </View>
 
       <SelectCustomerModal
         visible={customerModalVisible}
-        onClose={() => setCustomerModalVisible(false)}
+        onClose={handleModalClose}
         onSelect={handleCustomerSelect}
       />
     </SafeAreaView>
@@ -114,7 +120,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -4,
-    backgroundColor: "#E53935",
+    backgroundColor: "#25C5D1",
     borderRadius: 10,
     width: 16,
     height: 16,

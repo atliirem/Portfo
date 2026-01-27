@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Dimensions } from 'react-native';
 import React, { useEffect } from 'react';
 import FilterScreen from '../FilterScreen';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -15,12 +15,14 @@ import { setSelectedCountry } from '../../redux/Slice/countrySlice';
 import { setSelectedCity } from '../../redux/Slice/citySlice';
 import { setSelectedDistrict } from '../../redux/Slice/districtSlice';
 import { setSelectedStreet } from '../../redux/Slice/streetsSlice';
-
 import { clearSearchQuery } from '../../redux/Slice/searchSlice';
 import { resetFilteredProperties } from '../../redux/Slice/filteredPropertiesSlice';
 import { clearPrice } from '../../redux/Slice/priceCodeSlice';
+import { clearSelectedCurrency } from '../../redux/Slice/currenciesSlice';
 
 type NavigationProps = NativeStackNavigationProp<RootStackParamList>;
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const Index = () => {
   const navigation = useNavigation<NavigationProps>();
@@ -33,6 +35,7 @@ const Index = () => {
   const { selectedTypes } = useSelector((state: RootState) => state.types);
   const { selectedCountry } = useSelector((state: RootState) => state.country);
   const { minPrice, maxPrice } = useSelector((state: RootState) => state.price);
+  const { selectedCurrencyId } = useSelector((state: RootState) => state.currencies);
   const { query } = useSelector((state: RootState) => state.search);
 
   const isFilterActive =
@@ -40,6 +43,7 @@ const Index = () => {
     !!selectedCountry ||
     !!minPrice ||
     !!maxPrice ||
+    !!selectedCurrencyId ||
     !!query;
 
   useEffect(() => {
@@ -53,13 +57,14 @@ const Index = () => {
     dispatch(setSelectedDistrict(null));
     dispatch(setSelectedStreet(null));
     dispatch(clearPrice());
+    dispatch(clearSelectedCurrency());
     dispatch(clearSearchQuery());
     dispatch(resetFilteredProperties());
+
     setTimeout(() => {
       dispatch(getFilteredProperties(1));
     }, 100);
   };
-
 
   const handleNextPage = () => {
     if (!loading && pagination.currentPage < pagination.lastPage) {
@@ -67,13 +72,11 @@ const Index = () => {
     }
   };
 
-
   const handlePrevPage = () => {
     if (!loading && pagination.currentPage > 1) {
       dispatch(getFilteredProperties(pagination.currentPage - 1));
     }
   };
-
 
   const handleGoToPage = (page: number) => {
     if (!loading && page >= 1 && page <= pagination.lastPage) {
@@ -113,7 +116,6 @@ const Index = () => {
     );
   };
 
-
   const renderPagination = () => {
     if (pagination.lastPage <= 1) return null;
 
@@ -121,16 +123,19 @@ const Index = () => {
     const currentPage = pagination.currentPage;
     const lastPage = pagination.lastPage;
 
+  
+    const maxVisiblePages = screenWidth < 380 ? 3 : 5;
+    const sidePages = Math.floor(maxVisiblePages / 2);
 
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(lastPage, currentPage + 2);
+    let startPage = Math.max(1, currentPage - sidePages);
+    let endPage = Math.min(lastPage, currentPage + sidePages);
 
 
-    if (currentPage <= 2) {
-      endPage = Math.min(5, lastPage);
+    if (currentPage <= sidePages) {
+      endPage = Math.min(maxVisiblePages, lastPage);
     }
-    if (currentPage >= lastPage - 1) {
-      startPage = Math.max(1, lastPage - 4);
+    if (currentPage >= lastPage - sidePages) {
+      startPage = Math.max(1, lastPage - maxVisiblePages + 1);
     }
 
     for (let i = startPage; i <= endPage; i++) {
@@ -140,23 +145,24 @@ const Index = () => {
     return (
       <View style={styles.paginationContainer}>
 
+        {startPage > 1 && (
+          <TouchableOpacity
+            style={styles.pageButton}
+            onPress={() => handleGoToPage(1)}
+            disabled={loading}
+          >
+            <Ionicons name="play-back" size={14} color="#00A7C0" />
+          </TouchableOpacity>
+        )}
+
+
         <TouchableOpacity
           style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
           onPress={handlePrevPage}
           disabled={currentPage === 1 || loading}
         >
-          <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? "#ccc" : "#00A7C0"} />
+          <Ionicons name="chevron-back" size={18} color={currentPage === 1 ? "#ccc" : "#00A7C0"} />
         </TouchableOpacity>
-
-
-        {startPage > 1 && (
-          <>
-            <TouchableOpacity style={styles.pageButton} onPress={() => handleGoToPage(1)}>
-              <Text style={styles.pageButtonText}>1</Text>
-            </TouchableOpacity>
-            {startPage > 2 && <Text style={styles.dots}>...</Text>}
-          </>
-        )}
 
 
         {pages.map((page) => (
@@ -174,28 +180,28 @@ const Index = () => {
           </TouchableOpacity>
         ))}
 
-
-        {endPage < lastPage && (
-          <>
-            {endPage < lastPage - 1 && <Text style={styles.dots}>...</Text>}
-            <TouchableOpacity style={styles.pageButton} onPress={() => handleGoToPage(lastPage)}>
-              <Text style={styles.pageButtonText}>{lastPage}</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-
+   
         <TouchableOpacity
           style={[styles.pageButton, currentPage === lastPage && styles.pageButtonDisabled]}
           onPress={handleNextPage}
           disabled={currentPage === lastPage || loading}
         >
-          <Ionicons name="chevron-forward" size={20} color={currentPage === lastPage ? "#ccc" : "#00A7C0"} />
+          <Ionicons name="chevron-forward" size={18} color={currentPage === lastPage ? "#ccc" : "#00A7C0"} />
         </TouchableOpacity>
+
+
+        {endPage < lastPage && (
+          <TouchableOpacity
+            style={styles.pageButton}
+            onPress={() => handleGoToPage(lastPage)}
+            disabled={loading}
+          >
+            <Ionicons name="play-forward" size={14} color="#00A7C0" />
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
-
 
   const renderPageInfo = () => (
     <View style={styles.pageInfoContainer}>
@@ -208,7 +214,6 @@ const Index = () => {
   return (
     <View style={styles.container}>
       <FilterScreen />
-
 
       <View style={styles.headerContainer}>
         <Text style={styles.header}>
@@ -223,7 +228,6 @@ const Index = () => {
           )}
         </View>
       </View>
-
 
       {loading && properties.length === 0 ? (
         <View style={styles.centerLoader}>
@@ -242,7 +246,6 @@ const Index = () => {
         </View>
       ) : (
         <>
-
           <FlatList
             data={properties}
             keyExtractor={(item) => item.id.toString()}
@@ -257,10 +260,7 @@ const Index = () => {
             ) : null}
           />
 
-
           {pagination.total > 0 && renderPageInfo()}
-
-
           {renderPagination()}
         </>
       )}
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     flex: 1,
-    paddingBottom: 70,
+    paddingBottom: 90,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -362,26 +362,26 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
   },
-
-  // Sayfalama Stilleri
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: '#F8F9FA',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: '#ffff',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
+    marginTop: 12,
   },
   pageButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    minWidth: 32,
+    height: 32,
+    borderRadius: 6,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    paddingHorizontal: 6,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
@@ -393,25 +393,24 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   pageButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
+    
   },
   pageButtonTextActive: {
     color: '#fff',
-  },
-  dots: {
-    fontSize: 14,
-    color: '#999',
-    marginHorizontal: 4,
+    
   },
   pageInfoContainer: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 0,
     backgroundColor: '#fff',
+    marginTop: 5,
   },
   pageInfoText: {
     fontSize: 13,
     color: '#666',
+    marginTop: 0,
   },
 });

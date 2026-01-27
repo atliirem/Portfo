@@ -17,9 +17,11 @@ type NavigationProp = NativeStackNavigationProp<any, "ProposalsDetail">;
 
 type OffersCardProps = {
   id: number;
-  code: string;
+  image: string;
+  code: number;
   title: string;
   created_at: string;
+  expiry_at: string;
   property_count: number;
   status: {
     key: string;
@@ -35,6 +37,7 @@ const OffersCard: React.FC<OffersCardProps> = ({
   title,
   id, code,
   created_at,
+  expiry_at,
   status,
   company,
   property_count,
@@ -67,7 +70,6 @@ const OffersCard: React.FC<OffersCardProps> = ({
             </View>
           )}
 
-          {/* Actions */}
           <View style={styles.actionsRow}>
             <ProfileButton
               label="★★★★★"

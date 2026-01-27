@@ -88,6 +88,23 @@ const SelectCustomerModal: React.FC<Props> = ({ visible, onClose }) => {
     setCurrencyModalVisible(false);
   };
 
+  const handleClearSelections = async () => {
+  setSelectedCustomer(null);
+  setSelectedCurrency(null);
+
+  await saveCustomer(null);
+  await saveCurrency(null);
+
+  // Redux tarafını da sıfırla (gerekliyse)
+  dispatch(setPrice({ currency: "", currencyId: null }));
+  dispatch(setCommission({ currency: "", currencyId: null }));
+  dispatch(setPass({ currency: "", currencyId: null }));
+  dispatch(setSelectedCurrencyRedux(null));
+
+  onClose();
+};
+
+
   const handleCustomerSelect = async (customer: { id: number; name: string }) => {
     setSelectedCustomer(customer);
     await saveCustomer(customer);
@@ -141,15 +158,14 @@ const SelectCustomerModal: React.FC<Props> = ({ visible, onClose }) => {
         />
 
         <ProfileButton
-          height={40}
-          label="Kapat"
-          marginTop={0}
-          bg="#c4c4c4"
-          color="#fff"
-          onPress={handleClose}
-        />
+  height={40}
+  label="Seçilenleri Temizle"
+  marginTop={0}
+  bg="#c4c4c4"
+  color="#fff"
+  onPress={handleClearSelections}
+/>
 
-        {/* Müşteri Modal */}
         <Modal
           isVisible={customerModalVisible}
           onBackdropPress={() => setCustomerModalVisible(false)}

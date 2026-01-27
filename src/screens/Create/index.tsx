@@ -7,8 +7,11 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Modal from "react-native-modal";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
@@ -37,12 +40,17 @@ import { mapStateToFormData } from "../../redux/Slice/mapStateToFormData";
 
 type RootStackParamList = {
   Second: undefined;
+  Taslak: { propertyId: number; mode: 'create' | 'edit' };
 };
+
+const TAB_BAR_HEIGHT = 80;
+const BUTTON_CONTAINER_HEIGHT = 70;
 
 const Create = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
 
   const form = useAppSelector((s) => s.form);
   const { titles: categories } = useAppSelector((s) => s.types);
@@ -103,176 +111,184 @@ const Create = () => {
     return !Object.values(newErrors).includes(true);
   };
 
-const handleSubmit = async () => {
-  if (!validateFields()) return;
+  const handleSubmit = async () => {
+    if (!validateFields()) return;
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    const formData = mapStateToFormData(form, {});
+    try {
+      const formData = mapStateToFormData(form, {});
 
-    console.log("Draft oluşturuluyor...");
-    const response = await createProperty(formData);
+      const response = await createProperty(formData);
 
-    console.log("Create API yanıtı:", response);
+      if (response?.status !== "success") {
+        if (response?.data?.errors) {
+          const errorMessages = Object.values(response.data.errors)
+            .flat()
+            .join("\n");
+          Alert.alert("Hata", errorMessages);
+        } else {
+          Alert.alert("Hata", response?.message || "Draft oluşturulamadı!");
+        }
+        return;
+      }
 
-    if (response?.status !== "success") {
-      if (response?.data?.errors) {
-        const errorMessages = Object.values(response.data.errors)
+      const propertyId = response?.data?.property?.id;
+
+      if (!propertyId) {
+        Alert.alert("Hata", "Property ID alınamadı!");
+        return;
+      }
+
+      dispatch(setPropertyId(propertyId));
+
+      navigation.navigate("Taslak", { propertyId, mode: 'create' });
+
+    } catch (error: any) {
+      if (error?.data?.errors) {
+        const errorMessages = Object.values(error.data.errors)
           .flat()
           .join("\n");
         Alert.alert("Hata", errorMessages);
       } else {
-        Alert.alert("Hata", response?.message || "Draft oluşturulamadı!");
+        Alert.alert(
+          "Hata",
+          error?.message || "Draft oluşturulurken bir hata oluştu."
+        );
       }
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    const propertyId = response?.data?.property?.id;
-
-    if (!propertyId) {
-      Alert.alert("Hata", "Property ID alınamadı!");
-      return;
-    }
-
-  
-    dispatch(setPropertyId(propertyId));
-
-    console.log("Draft oluşturuldu, Property ID:", propertyId);
-
-
-    navigation.navigate("Second");
-
-  } catch (error: any) {
-    console.error("Draft oluşturma hatası:", error);
-
-    if (error?.data?.errors) {
-      const errorMessages = Object.values(error.data.errors)
-        .flat()
-        .join("\n");
-      Alert.alert("Hata", errorMessages);
-    } else {
-      Alert.alert(
-        "Hata",
-        error?.message || "Draft oluşturulurken bir hata oluştu."
-      );
-    }
-  } finally {
-    setIsLoading(false);
-  }
-};;
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.sectionHeader}>Temel Bilgiler</Text>
-
-        <TextInputUser
-          placeholder="İlan başlığı girin"
-          value={form.title}
-          onChangeText={handleTitleChange}
-          error={errors.title}
-          editable={!isLoading}
-        />
-
-        <TouchableOpacity
-          onPress={() => setCategoryModalVisible(true)}
-          style={{ marginTop: 10 }}
-          disabled={isLoading}
+    <View style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: BUTTON_CONTAINER_HEIGHT + TAB_BAR_HEIGHT }
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
+          <Text style={styles.sectionHeader}>Temel Bilgiler</Text>
+
           <TextInputUser
-            isModal
-            placeholder="Kategori seç"
-            value={form.selectedCategory}
-            editable={false}
-            error={errors.category}
-            onChangeText={() => {}}
+            placeholder="İlan başlığı girin"
+            value={form.title}
+            onChangeText={handleTitleChange}
+            error={errors.title}
+            editable={!isLoading}
           />
-        </TouchableOpacity>
 
-        <Modal
-          isVisible={categoryModalVisible}
-          onBackdropPress={() => setCategoryModalVisible(false)}
-          style={styles.modal}
-        >
-          <SafeAreaView style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Kategori Seç</Text>
-            <FlatList
-              data={categories.filter((item) => !item.parent)}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => handleCategorySelect(item.label, item.id)}
-                >
-                  <Text>{item.label}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </SafeAreaView>
-        </Modal>
-
-        {form.selectedCategoryId === 29 && (
           <TouchableOpacity
-            onPress={() => setSubCategoryModalVisible(true)}
-            style={{ marginTop: 10 }}
+            onPress={() => setCategoryModalVisible(true)}
+            style={styles.inputWrapper}
             disabled={isLoading}
           >
             <TextInputUser
               isModal
-              placeholder="Alt kategori seç"
-              value={form.selectedSubCategory}
+              placeholder="Kategori seç"
+              value={form.selectedCategory}
               editable={false}
-              error={errors.subCategory}
+              error={errors.category}
               onChangeText={() => {}}
             />
           </TouchableOpacity>
-        )}
 
-        <Modal
-          isVisible={subCategoryModalVisible}
-          onBackdropPress={() => setSubCategoryModalVisible(false)}
-          style={styles.modal}
-        >
-          <SafeAreaView style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Alt Kategori Seç</Text>
-            <FlatList
-              data={categories.filter(
-                (item) => item.parent === form.selectedCategory
-              )}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => handleSubCategorySelect(item.label, item.id)}
-                >
-                  <Text>{item.label}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </SafeAreaView>
-        </Modal>
+          <Modal
+            isVisible={categoryModalVisible}
+            onBackdropPress={() => setCategoryModalVisible(false)}
+            style={styles.modal}
+          >
+            <SafeAreaView style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Kategori Seç</Text>
+              <FlatList
+                data={categories.filter((item) => !item.parent)}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.categoryItem}
+                    onPress={() => handleCategorySelect(item.label, item.id)}
+                  >
+                    <Text>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </SafeAreaView>
+          </Modal>
 
-        <Location />
+          {form.selectedCategoryId === 29 && (
+            <TouchableOpacity
+              onPress={() => setSubCategoryModalVisible(true)}
+              style={styles.inputWrapper}
+              disabled={isLoading}
+            >
+              <TextInputUser
+                isModal
+                placeholder="Alt kategori seç"
+                value={form.selectedSubCategory}
+                editable={false}
+                error={errors.subCategory}
+                onChangeText={() => {}}
+              />
+            </TouchableOpacity>
+          )}
 
-        {(form.selectedCategoryId === 27 ||
-          form.selectedCategoryId === 21) && <PriceComponents />}
+          <Modal
+            isVisible={subCategoryModalVisible}
+            onBackdropPress={() => setSubCategoryModalVisible(false)}
+            style={styles.modal}
+          >
+            <SafeAreaView style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Alt Kategori Seç</Text>
+              <FlatList
+                data={categories.filter(
+                  (item) => item.parent === form.selectedCategory
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.categoryItem}
+                    onPress={() => handleSubCategorySelect(item.label, item.id)}
+                  >
+                    <Text>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </SafeAreaView>
+          </Modal>
 
-        {(form.selectedCategoryId === 9 ||
-          form.selectedCategoryId === 10) && <ArsaModal />}
+          <Location />
 
-        {form.selectedSubCategoryId === 34 && (
-          <Villa onValidate={(fn) => (villaValidatorRef.current = fn)} />
-        )}
+          {(form.selectedCategoryId === 27 ||
+            form.selectedCategoryId === 21) && <PriceComponents />}
 
-        {form.selectedSubCategoryId === 35 && (
-          <Apartman onValidate={(fn) => (apartmanValidatorRef.current = fn)} />
-        )}
+          {(form.selectedCategoryId === 9 ||
+            form.selectedCategoryId === 10) && <ArsaModal />}
 
+          {form.selectedSubCategoryId === 34 && (
+            <Villa onValidate={(fn) => (villaValidatorRef.current = fn)} />
+          )}
+
+          {form.selectedSubCategoryId === 35 && (
+            <Apartman onValidate={(fn) => (apartmanValidatorRef.current = fn)} />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <View style={[styles.bottomButtonContainer, { bottom: TAB_BAR_HEIGHT }]}>
         <TouchableOpacity
           style={[styles.button, isLoading && styles.disabledButton]}
           onPress={handleSubmit}
           disabled={isLoading}
+          activeOpacity={0.8}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
@@ -280,46 +296,73 @@ const handleSubmit = async () => {
             <Text style={styles.buttonText}>Devam Et</Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   );
 };
 
 export default Create;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
-  scrollContainer: { paddingHorizontal: 20, paddingBottom: 40 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: { 
+    paddingHorizontal: 20, 
+    paddingTop: 8,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: "800",
     color: "#25C5D1",
-    marginVertical: 15,
+    marginBottom: 8,
   },
-  modal: { margin: 0, justifyContent: "flex-end" },
+  inputWrapper: {
+    marginTop: 8,
+  },
+  modal: { 
+    margin: 0, 
+    justifyContent: "flex-end" 
+  },
   modalContainer: {
     backgroundColor: "white",
     padding: 20,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     maxHeight: "80%",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    marginBottom: 14,
+    marginBottom: 12,
     textAlign: "center",
   },
   categoryItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#eee",
+  },
+  bottomButtonContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
   },
   button: {
-    marginTop: 25,
     backgroundColor: "#25C5D1",
-    height: 48,
-    borderRadius: 8,
+    height: 50,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },

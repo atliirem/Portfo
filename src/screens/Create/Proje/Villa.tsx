@@ -21,7 +21,6 @@ import TextInputUser from "../../../components/TextInput/TextInputUser";
 import RoomInputs from "../RoomInputs";
 
 
-
 import {
   setPrice,
   setProject,
@@ -29,7 +28,8 @@ import {
   updatePriceOption,
   setLicenceFile,
 } from "../../../redux/Slice/formSlice";
-import FilePicker, { SelectedFile } from "../../../components/UploadFile/FileUploadExample";
+import FilePicker, { SelectedFile } from "../../../components/UploadFile/FileUploadR"
+import FileInputRPicker from "../../../components/UploadFile/FileUploadR";
 
 const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -58,7 +58,6 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
     dispatch(getCurrencies());
   }, [dispatch]);
 
-  // Redux'tan gelen licenceFile'ı local state'e yükle
   useEffect(() => {
     if (createAdData.licenceFile) {
       setLicenceFileState(createAdData.licenceFile);
@@ -119,13 +118,14 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Proje Villa</Text>
 
           <RoomInputs onValidate={(fn) => onValidate(fn)} />
 
-          <View style={{ marginTop: 15 }}>
+  
+          <View style={styles.sectionBlock}>
             <Text style={styles.sectionHeader}>Fiyat Bilgileri</Text>
 
             <TouchableOpacity onPress={() => setCurrencyModalVisible(true)}>
@@ -150,7 +150,7 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
 
               {currenciesLoading && <ActivityIndicator color="#00A7C0" />}
               {currenciesError && (
-                <Text style={{ color: "red" }}>{currenciesError}</Text>
+                <Text style={styles.errorText}>{currenciesError}</Text>
               )}
 
               <FlatList
@@ -176,49 +176,49 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
             </View>
           </Modal>
 
-          <View style={{ marginTop: 20 }}>
+
+          <View style={styles.sectionBlock}>
             <Text style={styles.sectionHeader}>Fiyat Seçenekleri</Text>
 
-            <View style={styles.info}>
+            <View style={styles.infoBox}>
               <Text style={styles.infoText}>
                 Aynı fiyat aralığındaki daireleri tek bir giriş altında
                 tanımlayabilirsiniz.
               </Text>
             </View>
 
-            <View>
-              {createAdData.project.priceOptions.map((value, index) => (
-                <TextInputUser
-                  key={index}
-                  value={value}
-                  onChangeText={(text) => handleUpdatePriceOption(text, index)}
-                  placeholder={`${index + 1}. Fiyat Seçeneği`}
-                  containerStyle={styles.input}
-                />
-              ))}
+            {createAdData.project.priceOptions.map((value, index) => (
+              <TextInputUser
+                key={index}
+                value={value}
+                onChangeText={(text) => handleUpdatePriceOption(text, index)}
+                placeholder={`${index + 1}. Fiyat Seçeneği`}
+                containerStyle={styles.input}
+              />
+            ))}
 
-              <TouchableOpacity
-                onPress={handleAddPriceOption}
-                style={styles.buttonnew}
-              >
-                <Text style={styles.buttonText}>Yeni Fiyat Ekle</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleAddPriceOption}
+              style={styles.addButton}
+            >
+              <Text style={styles.buttonText}>Yeni Fiyat Ekle</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Yetki Belgesi */}
-          <View style={{ marginTop: 20 }}>
-            <Text style={styles.sectionHeader}>Yetki Belgesi</Text>
 
-            <FilePicker
-              placeholder="Yetki belgesi seçin (PDF veya Resim)"
-              value={licenceFile}
-              onFileSelect={handleFileSelect}
-              allowedTypes={["pdf", "image"]}
-              maxFileSize={5}
-            />
+          <View style={styles.sectionBlock}>
+            <Text style={styles.sectionHeader1}>Yetki Belgesi</Text>
+<FileInputRPicker
+  label="."
+  value={licenceFile}
+  onChange={handleFileSelect}
+  allowedTypes={["pdf", "image"]}
+  maxFileSize={5}
+  errorText={null} 
+/>
 
-            <View style={styles.info}>
+
+            <View style={styles.infoBox}>
               <Text style={styles.infoText}>
                 Emlak firması olarak belirli sayıda bir daireyi satmak
                 istiyorsanız yetki belgesini yüklemelisiniz.
@@ -227,7 +227,7 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
 
             <TouchableOpacity
               onPress={handleDownloadPress}
-              style={styles.buttonnewORANGE}
+              style={styles.downloadButton}
             >
               <Text style={styles.buttonText}>ŞABLON İNDİR</Text>
             </TouchableOpacity>
@@ -240,22 +240,51 @@ const Villa = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
 
 export default Villa;
 
+
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
-  section: { marginTop: 10 },
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
+  scrollContent: {
+    paddingBottom: 0,
+  },
+  section: { 
+    marginTop: -2
+  },
+  sectionBlock: {
+    marginTop: 16,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: "800",
     color: "#25C5D1",
-    marginBottom: 10,
+    marginBottom: 3,
+    marginTop: 0
   },
-  textInput: { marginTop: 12 },
+    sectionHeader1: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#25C5D1",
+    marginBottom: 13,
+    marginTop: 0
+  },
+  inputWrapper: {
+    marginTop: 10,
+  },
   errorInput: {
     borderWidth: 1.5,
     borderColor: "red",
     borderRadius: 8,
   },
-  modal: { margin: 0, justifyContent: "flex-end" },
+  errorText: {
+    color: "red",
+  },
+  modal: { 
+    margin: 0, 
+    justifyContent: "flex-end" 
+  },
   modalContainer: {
     backgroundColor: "white",
     padding: 20,
@@ -273,11 +302,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
-  info: {
+  infoBox: {
     backgroundColor: "#fff4cd",
     padding: 10,
     borderRadius: 6,
-    marginTop: 10,
+    marginBottom: 10,
   },
   infoText: {
     fontSize: 13,
@@ -285,23 +314,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#1b1a16",
   },
-  buttonnew: {
+  addButton: {
     width: "100%",
     backgroundColor: "#25C5D1",
     height: 45,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 6.5,
-    marginTop: 15,
+    marginTop: 4,
   },
-  buttonnewORANGE: {
+  downloadButton: {
     width: "100%",
     backgroundColor: "#ffca63",
     height: 45,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 6.5,
-    marginTop: 15,
   },
   buttonText: {
     color: "#fff",
@@ -310,7 +338,9 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    marginTop: 10,
-    marginBottom: 10,
+    marginBottom: 8,
   },
-});
+})
+
+
+

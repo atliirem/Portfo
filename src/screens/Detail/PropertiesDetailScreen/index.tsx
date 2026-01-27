@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -15,40 +15,106 @@ import { RootStackParamList } from "../../../navigation/RootStack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppDispatch } from "../../../redux/Hooks";
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { useFocusEffect } from "@react-navigation/native";
 
 import BannerPhoto from "../../../components/Banner/BannerPhoto";
 import PropertiesButton from "../../../components/Buttons/PropertiesButton";
+import MyPropertiesButton from "../../../components/Buttons/MyPropertiesButton";
 import { BannerDetail } from "../../../components/Banner/BannerDetail";
 import MapOrVideos from "../../MapOrVideos";
+import TaslakInfo from "../../Create/Components/TaslakInfo";
 import { getAllCompanies, getProperties } from "../../../../api";
+import {
+  setDetailFeatures,
+  setDetailLoading,
+  clearDetailFeatures,
+} from "../../../redux/Slice/featureSlice";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PropertiesDetailScreen">;
 
 const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { id } = route.params;
   const dispatch = useAppDispatch();
-  const { discountedList, latestList, property, loading } = useSelector(
+
+  const { discountedList, latestList, myList, property, loading } = useSelector(
     (state: RootState) => state.properties
   );
+
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { company } = useSelector((state: RootState) => state.company);
+
+  const [retryCount, setRetryCount] = useState(0);
+  
+
+  const [fetchedProperty, setFetchedProperty] = useState<any>(null);
 
   useEffect(() => {
     dispatch(getAllCompanies());
   }, [dispatch]);
 
-  useEffect(() => {
-    dispatch(getProperties(id));
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        dispatch(setDetailLoading(true));
+
+        try {
+          const result = await dispatch(getProperties(id)).unwrap();
+          
+          // Tüm property verisini kaydet
+          if (result) {
+            setFetchedProperty(result);
+          }
+
+          if (result?.features && Array.isArray(result.features)) {
+            dispatch(
+              setDetailFeatures({
+                propertyId: id,
+                features: result.features,
+              })
+            );
+          }
+        } catch (error: any) {
+          console.error("Property fetch error:", error);
+          if (error?.includes?.("Too Many") || error?.includes?.("429")) {
+            if (retryCount < 3) {
+              setTimeout(() => setRetryCount((prev) => prev + 1), 3000);
+            }
+          }
+        }
+      };
+
+      fetchData();
+
+      return () => {
+        dispatch(clearDetailFeatures());
+        setFetchedProperty(null);
+      };
+    }, [id, dispatch, retryCount])
+  );
 
   const handleCompanyPress = (companyId: number) => {
     navigation.navigate("CompanyDetailScreen", { id: companyId });
   };
 
   const previewItem =
-    discountedList.find((p) => p.id === id) || latestList.find((p) => p.id === id);
+    myList.find((p) => p.id === id) ||
+    discountedList.find((p) => p.id === id) ||
+    latestList.find((p) => p.id === id);
 
   const detailItem = property && property.id === id ? property : null;
+  
 
-  const displayItem = detailItem || previewItem;
+  const displayItem = fetchedProperty || detailItem || previewItem;
+
+  const isDraft = displayItem?.status === "draft";
+
+  const isMyProperty = (() => {
+    if (!displayItem?.company?.id) return false;
+    if (company?.id && displayItem.company.id === company.id) return true;
+    if (user?.company_id && displayItem.company.id === user.company_id) return true;
+    if (myList.some((p) => p.id === id)) return true;
+    return false;
+  })();
 
   if (!displayItem) {
     return (
@@ -65,34 +131,40 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scroll}>
+
         <View style={styles.imageContainer}>
           <BannerPhoto id={id} />
           <View style={styles.iconContainer}>
-            <PropertiesButton item={displayItem} />
+            {isMyProperty ? (
+              <MyPropertiesButton item={displayItem} />
+            ) : (
+              <PropertiesButton item={displayItem} />
+            )}
           </View>
         </View>
 
-        <View style={styles.contentContainer}>
+        <View style={styles.contentSection}>
+        
+
           <Text style={styles.title}>{displayItem.title}</Text>
 
-          <View style={styles.content}>
-            <View style={{ flexDirection: "row" }}>
+          <View style={styles.locationRow}>
+            <View style={styles.locationItem}>
               <Ionicons name="location-outline" color="#C4C4C4" size={15} />
-              <Text style={styles.location}>
+              <Text style={styles.locationText}>
                 {displayItem.city?.title} / {displayItem.district?.title}
               </Text>
             </View>
 
             {displayItem.updated_at && (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={styles.locationItem}>
                 <Ionicons name="time-outline" color="#C4C4C4" size={15} />
-                <Text style={{ color: "#C4C4C4", marginLeft: 5, fontSize: 14 }}>
-                  {displayItem.updated_at}
-                </Text>
+                <Text style={styles.dateText}>{displayItem.updated_at}</Text>
               </View>
             )}
           </View>
 
+ 
           <View style={styles.priceContainer}>
             <View style={styles.priceHeaderRow}>
               <Text style={styles.priceLabel}>Pass Fiyatı</Text>
@@ -100,45 +172,55 @@ const PropertiesDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             </View>
             <View style={styles.priceRow}>
               <Text style={styles.price}>
-                {displayItem.prices?.secondary.formatted}
+                {displayItem.prices?.secondary?.formatted || "-"}
               </Text>
               <Text style={styles.price}>
-                {displayItem.prices?.primary.formatted}
+                {displayItem.prices?.primary?.formatted || "-"}
               </Text>
             </View>
           </View>
 
-          <BannerDetail id={id} />
-        </View>
-
-        <View>
-          {detailItem ? (
-            <MapOrVideos locationData={detailItem.map} />
-          ) : loading ? (
-            <View style={styles.mapLoading}>
-              <ActivityIndicator size="small" color="#1a8b95" />
-              <Text style={styles.mapLoadingText}>Harita yükleniyor...</Text>
+ {isDraft && (
+            <View style={styles.draftInfoBox}>
+              <Text style={styles.draftInfoText}>
+                Bu ilan taslak durumunda olduğu için özellikler görüntülenmiyor.
+                İlanı yayınladıktan sonra tüm özellikler görünür olacaktır.
+              </Text>
             </View>
-          ) : null}
-        </View>
+          )}
+
+          <BannerDetail id={id} isDraft={isDraft} />
 
 
-        {displayItem.company && (
-          <TouchableOpacity
-            style={styles.companyCard}
-            onPress={() => handleCompanyPress(displayItem.company.id)}
-          >
-            <Image
-              style={styles.companyLogo}
-              source={{ uri: displayItem.company.logo }}
+          {displayItem?.map && (
+            <MapOrVideos
+              locationData={displayItem.map}
+              videoUrl={displayItem.video_url}
+              editable={false}
             />
-            <View style={styles.companyInfo}>
-              <Text style={styles.companyLabel}>İlan Sahibi</Text>
-              <Text style={styles.companyTitle}>{displayItem.company.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward-outline" size={24} color="#a9a9a9" />
-          </TouchableOpacity>
-        )}
+          )}
+
+  
+    
+
+
+          {displayItem.company && (
+            <TouchableOpacity
+              style={styles.companyCard}
+              onPress={() => handleCompanyPress(displayItem.company.id)}
+            >
+              <Image
+                style={styles.companyLogo}
+                source={{ uri: displayItem.company.logo }}
+              />
+              <View style={styles.companyInfo}>
+                <Text style={styles.companyLabel}>İlan Sahibi</Text>
+                <Text style={styles.companyTitle}>{displayItem.company.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={24} color="#a9a9a9" />
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -168,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     zIndex: 10,
   },
-  contentContainer: {
+  contentSection: {
     paddingHorizontal: 16,
     paddingTop: 20,
   },
@@ -177,13 +259,28 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#000",
     marginBottom: 12,
-    marginTop: 40,
+    marginTop: 10,
   },
-  content: {
+  locationRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
+  },
+  locationItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  locationText: {
+    color: "#C4C4C4",
+    fontSize: 15,
+    fontWeight: "500",
+    marginLeft: 4,
+  },
+  dateText: {
+    color: "#C4C4C4",
+    marginLeft: 5,
+    fontSize: 14,
   },
   priceContainer: {
     marginBottom: 20,
@@ -216,29 +313,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-  location: {
-    color: "#C4C4C4",
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  mapLoading: {
-    height: 200,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapLoadingText: {
-    color: "#999",
-    marginTop: 10,
-  },
-  // Firma Kartı
   companyCard: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C4C4C4",
-    borderRadius: 6,
+    borderColor: "#E5E5E5",
+    borderRadius: 12,
     padding: 12,
-    margin: 10,
+    marginTop: -65,
   },
   companyLogo: {
     width: 45,
@@ -258,5 +340,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontSize: 15,
     marginTop: 2,
+  },
+  draftInfoBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#fff4ce",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 0,
+    gap: 8,
+  },
+  draftInfoText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#bd8827",
+    lineHeight: 18,
+    justifyContent: 'center',
+    textAlign: 'center',
   },
 });

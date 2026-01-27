@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "#ffff",
     paddingHorizontal: 16,
   },
   multilineContainer: {

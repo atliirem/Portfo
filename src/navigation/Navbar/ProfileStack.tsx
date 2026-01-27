@@ -11,6 +11,7 @@ import Offers from "../../screens/Offers";
 import Contact from "../../screens/Contact";
 
 
+
 import {CustomerOffers} from "../../screens/Detail/CustomerOffers";
 
 
@@ -29,7 +30,7 @@ import GalleryScreen from "../../screens/GalleryScreen";
 import Taslak from "../../screens/Create/Taslak"
 
 import Top from "../Top";
-import MyPropertiesDetailScreen from "../../screens/Detail/MyPropertiesDetailScreen";
+
 import EditProperty from "../../screens/Edit/EditProperty";
 import MySubscriptionsScreen from "../../screens/PackagePortfoy";
 import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
@@ -45,6 +46,12 @@ import SentOffersDetail from "../../components/OffersComponents/SentOffers/SentO
 import MyOfferDetail from "../../components/OffersComponents/OffersDetailComponent/MyOffers/MyOffersDetail";
 import ProposalsDetail from "../../screens/ProposalsDetaill/ProposalsDetail";
 import { DetailScreen } from "../../screens/ProposalsDetaill/DetailScreens";
+import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
+import EditCompany from "../../screens/Company/EditCompany";
+import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
+import { CustomerOffersDetail } from "../../screens/Detail/GetCustomerOffers";
+import InvitationsScreen from "../../components/Team/Invitations";
+
 
 
 export type ProfileStackParamList = {
@@ -58,6 +65,10 @@ export type ProfileStackParamList = {
   DetailAlertsScreen: undefined;
   Company: undefined;
   CustomerOffers: undefined;
+  CustomerOffersDetail: undefined;
+  CreateTaslak: undefined;
+
+
   Notification: undefined;
   SummaryScreen: undefined;
   DetailAlerts: undefined;
@@ -69,11 +80,11 @@ export type ProfileStackParamList = {
   CompanyTeamComponents: {id: number}
   OffersDetail: {id: number}
   OfffersDetail: {id: number}
-  Second: undefined;
-  Taslak: undefined;
+  InvitationsScreen: undefined;
+
   EditProperty: { id: number };
   MySubscriptionsScreen: undefined;
-  EditTaslak: undefined;
+
   SettingsScreen: undefined;
   SelectCustomerModal: undefined;
   SentOffersDetail: {id: number}
@@ -81,6 +92,15 @@ export type ProfileStackParamList = {
   MyOffersDetail: {id: number}
   ProposalsDetail: {id: number, code: number};
   DetailScreen: {id: number, code: number}
+     Second: undefined;
+  Taslak: { propertyId: number };
+   SelectedPropertiesScreen: undefined;
+   EditCompany: undefined;
+  FullScreenGallery: {
+    images: { uri: string }[];
+    startIndex: number;
+  };
+  
 
 
 CompanyDetailScreen: {id: number}
@@ -110,7 +130,40 @@ export default function ProfileStack() {
         options={{
           header: () => <TopBar />, 
         }}
+      /> 
+       
+
+       <Stack.Screen
+        name="EditTaslak"
+        component={EditTaslak}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      /> 
+
+       <Stack.Screen
+        name="PropertiesDetailScreen"
+        component={PropertiesDetailScreen}
+         options={{ headerShown: false }}
       />  
+
+
+      <Stack.Screen
+        name="SelectedPropertiesScreen"
+        component={SelectedPropertiesScreen}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
+   
+     <Stack.Screen
+        name="EditCompany"
+        component={EditCompany}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+
         <Stack.Screen
         name="SentOffersDetail"
         component={SentOffersDetail}
@@ -121,6 +174,13 @@ export default function ProfileStack() {
       <Stack.Screen
         name="ProposalsDetail"
         component={ProposalsDetail}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
+        <Stack.Screen
+        name="CustomerOffersDetail"
+        component={CustomerOffersDetail}
         options={{
           header: () => <Top />, 
         }}
@@ -139,6 +199,14 @@ export default function ProfileStack() {
           header: () => <Top />, 
         }}
       />
+      <Stack.Screen 
+  name="FullScreenGallery" 
+  component={FullScreenGallery}
+  options={{ 
+    headerShown: false,
+    presentation: 'fullScreenModal' 
+  }}
+/>
 
 
         <Stack.Screen
@@ -156,13 +224,7 @@ export default function ProfileStack() {
         }}
       />
 
-       <Stack.Screen
-        name="EditTaslak"
-        component={EditTaslak}
-        options={{
-          header: () => <Top />, 
-        }}
-      />
+      
 
        <Stack.Screen
         name="CompanyLoc"
@@ -191,6 +253,14 @@ export default function ProfileStack() {
       />
 
 
+
+<Stack.Screen
+        name="InvitationsScreen"
+        component={InvitationsScreen}
+        options={{
+          header: () => <Top />, 
+        }}
+      />
 
 <Stack.Screen
         name="CompanyDetailScreen"
@@ -247,12 +317,12 @@ export default function ProfileStack() {
           header: () => <TopBar />, 
         }}
       />
-      {/* <Stack.Screen
+     <Stack.Screen
         name="ChangePassword"
         component={ChangePassword}
       options={{
           header: () => <TopBar />, 
-        }} */}
+        }} />
      
       <Stack.Screen
         name="PropertiesScreenProfile"
@@ -297,16 +367,8 @@ export default function ProfileStack() {
           header: () => <TopBar />,
         }}
       />
-       <Stack.Screen
-        name="PropertiesDetailScreen"
-        component={PropertiesDetailScreen}
-      options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MyPropertiesDetailScreen"
-        component={MyPropertiesDetailScreen}
-      options={{ headerShown: false }}
-      />
+    
+   
        <Stack.Screen
         name="Favorite"
         component={Favorite}

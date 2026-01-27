@@ -3,8 +3,10 @@ import {
   getOffersDetail,
   getReceivedOffers,
   getSentOffers,
-  getProposals,  // ← Ekle
+  getProposals,
+  getProposalDetail, 
   replyToOffer,
+  getCustomerProposals,
 } from "../../../api";
 
 interface OffersState {
@@ -15,6 +17,10 @@ interface OffersState {
   proposalsList: any[];
   loadingProposals: boolean;
   errorProposals: string | null;
+
+  proposalDetail: any | null; 
+  loadingProposalDetail: boolean; 
+
 
   selectedOffer: any | null;
 
@@ -29,6 +35,9 @@ const initialState: OffersState = {
   proposalsList: [],
   loadingProposals: false,
   errorProposals: null,
+
+  proposalDetail: null,  
+  loadingProposalDetail: false, 
 
   selectedOffer: null,
 
@@ -52,9 +61,12 @@ const offersSlice = createSlice({
     resetSelectedOffer: (state) => {
       state.selectedOffer = null;
     },
+    resetProposalDetail: (state) => { 
+      state.proposalDetail = null;
+    },
   },
   extraReducers: (builder) => {
-    // Received Offers
+
     builder
       .addCase(getReceivedOffers.pending, (state) => {
         state.loadingOffers = true;
@@ -88,7 +100,6 @@ const offersSlice = createSlice({
         state.errorProposals = action.payload as string;
       });
 
-    // Proposals (getProposals) ← YENİ
     builder
       .addCase(getProposals.pending, (state) => {
         state.loadingProposals = true;
@@ -105,22 +116,38 @@ const offersSlice = createSlice({
         state.errorProposals = action.payload as string;
       });
 
-    // Offer Detail
+builder
+  .addCase(getCustomerProposals.pending, (state) => {
+    state.loadingProposals = true;
+    state.errorProposals = null;
+    state.proposalsList = [];
+  })
+  .addCase(getCustomerProposals.fulfilled, (state, action) => {
+    state.loadingProposals = false;
+
+
+    state.proposalsList = action.payload?.data?.proposals ?? [];
+  })
+  .addCase(getCustomerProposals.rejected, (state, action) => {
+    state.loadingProposals = false;
+    state.errorProposals = action.payload as string;
+  });
+
     builder
       .addCase(getOffersDetail.pending, (state) => {
         state.loadingOffers = true;
         state.errorOffers = null;
       })
-      .addCase(getOffersDetail.fulfilled, (state, action) => {
-        state.loadingOffers = false;
-        state.selectedOffer = action.payload;
-      })
+   .addCase(getProposalDetail.fulfilled, (state, action) => {
+  state.loadingProposalDetail = false;
+  state.proposalDetail = action.payload?.data ?? action.payload ?? null;
+})
       .addCase(getOffersDetail.rejected, (state, action) => {
         state.loadingOffers = false;
         state.errorOffers = action.payload as string;
       });
 
-    // Reply to Offer
+
     builder
       .addCase(replyToOffer.pending, (state) => {
         state.replyLoading = true;
@@ -156,6 +183,7 @@ export const {
   resetSentOffers,
   resetReceivedOffers,
   resetSelectedOffer,
+  resetProposalDetail, 
 } = offersSlice.actions;
 
 export default offersSlice.reducer;

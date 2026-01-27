@@ -1,5 +1,3 @@
-// src/components/FilePicker/FilePicker.tsx
-
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -24,16 +22,12 @@ interface FilePickerProps {
   placeholder?: string;
   allowedTypes?: ("pdf" | "image" | "doc" | "all")[];
   containerStyle?: object;
-  buttonStyle?: object;
-  textStyle?: object;
   disabled?: boolean;
-  error?: boolean;
-  errorMessage?: string;
-  showRemoveButton?: boolean;
-  showFileSize?: boolean;
-  maxFileSize?: number;
+  errorText?: string | null;
   label?: string;
   required?: boolean;
+  maxFileSize?: number; // MB
+  showRemoveButton?: boolean;
 }
 
 const FilePicker: React.FC<FilePickerProps> = ({
@@ -42,45 +36,24 @@ const FilePicker: React.FC<FilePickerProps> = ({
   placeholder = "Dosya Seçin",
   allowedTypes = ["pdf", "image"],
   containerStyle,
-  buttonStyle,
-  textStyle,
   disabled = false,
-  error = false,
-  errorMessage,
-  showRemoveButton = true,
-  showFileSize = true,
-  maxFileSize = 10,
+  errorText = null,
   label,
   required = false,
+  maxFileSize = 10,
+  showRemoveButton = true,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return "";
-
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  // Dosya tipini kontrol et
   const isAllowedType = (mimeType: string, fileName: string): boolean => {
     if (allowedTypes.includes("all")) return true;
 
-    const type = mimeType?.toLowerCase() || "";
-    const name = fileName?.toLowerCase() || "";
+    const type = (mimeType || "").toLowerCase();
+    const name = (fileName || "").toLowerCase();
 
-    for (const allowed of allowedTypes) {
-      if (allowed === "pdf") {
-        if (type.includes("pdf") || name.endsWith(".pdf")) return true;
-      }
-      if (allowed === "image") {
-        if (type.includes("image") || /\.(jpg|jpeg|png|gif|webp|bmp)$/.test(name)) return true;
-      }
-      if (allowed === "doc") {
-        if (type.includes("word") || type.includes("document") || /\.(doc|docx)$/.test(name)) return true;
-      }
-    }
+    if (allowedTypes.includes("pdf") && (type.includes("pdf") || name.endsWith(".pdf"))) return true;
+    if (allowedTypes.includes("image") && (type.includes("image") || /\.(jpg|jpeg|png|gif|webp|bmp)$/.test(name))) return true;
+    if (allowedTypes.includes("doc") && (type.includes("word") || /\.(doc|docx)$/.test(name))) return true;
 
     return false;
   };
@@ -90,69 +63,29 @@ const FilePicker: React.FC<FilePickerProps> = ({
 
     try {
       setIsLoading(true);
+      const result: any = await pick();
+      const file = Array.isArray(result) ? result[0] : result;
+      if (!file?.uri) return;
 
-      // ✅ Tüm dosyaları kabul et, sonra filtrele
-      const result = await pick();
+      const name = file.name || file.fileName || "dosya";
+      const type = file.type || file.mimeType || "application/octet-stream";
+      const size = file.size || file.fileSize || 0;
 
-      console.log("Pick result:", result);
-
-      let file: any = null;
-
-      if (Array.isArray(result) && result.length > 0) {
-        file = result[0];
-      } else if (result && typeof result === "object") {
-        file = result;
+      if (!isAllowedType(type, name)) {
+        Alert.alert("Geçersiz Dosya Tipi");
+        return;
       }
 
-      console.log("Selected file:", file);
-
-      if (file && file.uri) {
-        const fileName = file.name || file.fileName || "";
-        const fileType = file.type || file.mimeType || "";
-
-        // Dosya tipi kontrolü
-        if (!isAllowedType(fileType, fileName)) {
-          Alert.alert(
-            "Geçersiz Dosya Tipi",
-            `Sadece ${allowedTypes.join(", ").toUpperCase()} dosyaları yükleyebilirsiniz.`
-          );
-          return;
-        }
-
-        // Dosya boyutu kontrolü
-        const fileSize = file.size || file.fileSize || 0;
-        if (fileSize && maxFileSize) {
-          const fileSizeMB = fileSize / (1024 * 1024);
-          if (fileSizeMB > maxFileSize) {
-            Alert.alert(
-              "Dosya Çok Büyük",
-              `Maksimum dosya boyutu ${maxFileSize} MB olmalıdır.`
-            );
-            return;
-          }
-        }
-
-        const selectedFile: SelectedFile = {
-          uri: file.uri,
-          name: fileName || "dosya",
-          type: fileType || "application/octet-stream",
-          size: fileSize || undefined,
-        };
-
-        console.log("Final selectedFile:", selectedFile);
-        onFileSelect(selectedFile);
+      if (size && size / (1024 * 1024) > maxFileSize) {
+        Alert.alert("Dosya Çok Büyük", `Maksimum ${maxFileSize} MB`);
+        return;
       }
-    } catch (err: any) {
-      console.log("Pick error:", err);
 
-      const msg = err?.message?.toLowerCase() || "";
-      const code = err?.code?.toLowerCase() || "";
-
-      if (msg.includes("cancel") || code.includes("cancel")) {
-        console.log("Dosya seçimi iptal edildi");
-      } else {
-        console.error("Dosya seçme hatası:", err);
-        Alert.alert("Hata", "Dosya seçilirken bir hata oluştu.");
+      onFileSelect({ uri: file.uri, name, type, size });
+    } catch (e: any) {
+      const msg = (e?.message || "").toLowerCase();
+      if (!msg.includes("cancel")) {
+        Alert.alert("Hata", "Dosya seçilirken hata oluştu.");
       }
     } finally {
       setIsLoading(false);
@@ -160,90 +93,51 @@ const FilePicker: React.FC<FilePickerProps> = ({
   };
 
   const handleRemove = () => {
-    Alert.alert(
-      "Dosyayı Kaldır",
-      "Seçili dosyayı kaldırmak istediğinize emin misiniz?",
-      [
-        { text: "İptal", style: "cancel" },
-        {
-          text: "Kaldır",
-          style: "destructive",
-          onPress: () => onFileSelect(null),
-        },
-      ]
-    );
-  };
-
-  const getFileIcon = (): string => {
-    if (!value?.type) return "📄";
-
-    if (value.type.includes("pdf")) return "📕";
-    if (value.type.includes("image")) return "🖼️";
-    if (value.type.includes("doc") || value.type.includes("word")) return "📘";
-    return "📄";
+    Alert.alert("Dosyayı Kaldır", "Emin misiniz?", [
+      { text: "İptal", style: "cancel" },
+      { text: "Kaldır", style: "destructive", onPress: () => onFileSelect(null) },
+    ]);
   };
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      {label && (
-        <Text style={styles.label}>
-          {label}
-          {required && <Text style={styles.required}> *</Text>}
-        </Text>
-      )}
-
-      <TouchableOpacity
-        onPress={handlePick}
-        disabled={disabled || isLoading}
+    <View style={[styles.wrap, containerStyle]}>
+      <View
         style={[
-          styles.pickerButton,
-          buttonStyle,
-          error && styles.errorBorder,
+          styles.container,
+          errorText && styles.errorBorder,
           disabled && styles.disabled,
         ]}
-        activeOpacity={0.7}
       >
-        <View style={styles.buttonContent}>
+        {label && (
+          <View style={styles.labelWrap}>
+            <Text style={[styles.label, errorText && styles.labelError]}>
+              {label}
+              {required && <Text style={styles.required}> *</Text>}
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={handlePick}
+          disabled={disabled || isLoading}
+          activeOpacity={0.7}
+          style={styles.touch}
+        >
           {isLoading ? (
-            <ActivityIndicator color="#25C5D1" size="small" />
+            <ActivityIndicator />
           ) : value ? (
-            <>
-              <Text style={styles.fileIcon}>{getFileIcon()}</Text>
-              <View style={styles.fileInfo}>
-                <Text style={[styles.fileName, textStyle]} numberOfLines={1}>
-                  {value.name}
-                </Text>
-                {showFileSize && value.size && (
-                  <Text style={styles.fileSize}>
-                    {formatFileSize(value.size)}
-                  </Text>
-                )}
-              </View>
-            </>
+            <Text style={styles.valueText} numberOfLines={1}>
+              {value.name}
+            </Text>
           ) : (
-            <>
-              <Text style={styles.uploadIcon}>📁</Text>
-              <Text style={[styles.placeholder, textStyle]}>{placeholder}</Text>
-            </>
+            <Text style={styles.placeholder}>{placeholder}</Text>
           )}
-
-          <Text style={styles.arrow}>▼</Text>
-        </View>
-      </TouchableOpacity>
-
-      {error && errorMessage && (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      )}
-
-      {value && showRemoveButton && !disabled && (
-        <TouchableOpacity onPress={handleRemove} style={styles.removeButton}>
-          <Text style={styles.removeButtonText}>✕ Dosyayı Kaldır</Text>
         </TouchableOpacity>
-      )}
+      </View>
 
-      <Text style={styles.allowedTypes}>
-        İzin verilen: {allowedTypes.join(", ").toUpperCase()} (Maks: {maxFileSize} MB)
-      </Text>
+      {!!errorText && <Text style={styles.error}>{errorText}</Text>}
+
+     
     </View>
   );
 };
@@ -251,88 +145,67 @@ const FilePicker: React.FC<FilePickerProps> = ({
 export default FilePicker;
 
 const styles = StyleSheet.create({
+  wrap: {
+    marginBottom: 18,
+  },
   container: {
-    marginVertical: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 6,
-  },
-  required: {
-    color: "#e74c3c",
-  },
-  pickerButton: {
+    height: 58,
+    borderRadius: 3,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderStyle: "dashed",
-  },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  uploadIcon: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  fileIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
-  fileInfo: {
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
-  },
-  fileSize: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  placeholder: {
-    fontSize: 14,
-    color: "#999",
-    flex: 1,
-  },
-  arrow: {
-    fontSize: 12,
-    color: "#999",
-    marginLeft: 8,
-  },
-  errorBorder: {
-    borderColor: "#e74c3c",
-    borderWidth: 1.5,
+    borderColor: "#C9CDD3",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    justifyContent: "center",
   },
   disabled: {
-    backgroundColor: "#f5f5f5",
-    opacity: 0.7,
+    backgroundColor: "#F1F5F9",
   },
-  errorText: {
-    color: "#e74c3c",
+  errorBorder: {
+    borderColor: "#EF4444",
+  },
+  labelWrap: {
+    position: "absolute",
+    left: 12,
+    top: -10,
+    paddingHorizontal: 6,
+    backgroundColor: "#FFFFFF",
+    zIndex: 1,
+  },
+  label: {
     fontSize: 12,
-    marginTop: 4,
+    color: "#c4c4c4",
+    fontWeight: "600",
   },
-  removeButton: {
-    marginTop: 8,
-    paddingVertical: 6,
-    alignItems: "flex-start",
+  labelError: {
+    color: "#EF4444",
   },
-  removeButtonText: {
-    color: "#e74c3c",
-    fontSize: 13,
-    fontWeight: "500",
+  required: {
+    color: "#EF4444",
   },
-  allowedTypes: {
-    fontSize: 11,
-    color: "#aaa",
+  touch: {
+    height: "100%",
+    justifyContent: "center",
+  },
+  placeholder: {
+    fontSize: 16,
+    color: "#787878ff",
+  },
+  valueText: {
+    fontSize: 16,
+    color: "#0F172A",
+  },
+  error: {
     marginTop: 6,
+    color: "#EF4444",
+    fontSize: 12,
+  },
+  remove: {
+    marginTop: 8,
+  },
+  removeText: {
+    color: "#EF4444",
+    fontSize: 10,
+    fontWeight: "500",
+    left: 260
   },
 });

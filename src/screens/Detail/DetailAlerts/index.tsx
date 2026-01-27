@@ -1,100 +1,124 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, Text } from "react-native";
+import { View, StyleSheet, FlatList, Text, ActivityIndicator } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { getNotifications } from "../../../../api";
 import { RootState } from "../../../redux/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NotificationCard from "../../../components/Cards/NotificationsCard"
+import NotificationCard from "../../../components/Cards/NotificationsCard";
 import { useFocusEffect } from "@react-navigation/native";
 
-export const  DetailAlerts: React.FC = () => {
+export const DetailAlerts: React.FC = () => {
   const dispatch = useDispatch();
-  const { alertsList, loading } = useSelector(
-    (state: RootState) => state.properties
-  );
+  const { alertsList, loading } = useSelector((state: RootState) => state.properties);
   const [readIds, setReadIds] = useState<number[]>([]);
 
-
   useEffect(() => {
-    dispatch(getNotifications() );
+    dispatch(getNotifications() as any);
   }, [dispatch]);
-
 
   useFocusEffect(
     useCallback(() => {
+      let isActive = true;
+
       const loadReadIds = async () => {
         const stored = await AsyncStorage.getItem("@READ_NOTIFICATIONS");
         const ids = stored ? JSON.parse(stored) : [];
-        setReadIds(ids);
+        if (isActive) setReadIds(ids);
       };
+
       loadReadIds();
+      return () => {
+        isActive = false;
+      };
     }, [])
   );
 
-  const renderItem = ({ item }: any) => (
-    <NotificationCard
-      id={item.id}
-      content={item.content}
-      time_diff={item.time_diff}
-      onPress={() => {}}
-    />
+  const renderItem = useCallback(
+    ({ item }: any) => (
+      <NotificationCard
+        id={item.id}
+        content={item.content}
+        time_diff={item.time_diff}
+        onPress={() => {}}
+      />
+    ),
+    []
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text>Yükleniyor...</Text>
-      </View>
+      <SafeAreaView style={styles.safe} edges={[ "bottom"]}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#00A7C0" />
+          <Text style={styles.centerText}>Yükleniyor...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!alertsList || alertsList.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text>Henüz bildirim yok</Text>
-      </View>
+      <SafeAreaView style={styles.safe} edges={["bottom"]}>
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>Henüz bildirim yok</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
       <View style={styles.container}>
-        <Text style={styles.header}>Bildirimler</Text>
         <FlatList
           data={alertsList}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          extraData={readIds} 
+          extraData={readIds}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
+          ListHeaderComponent={<Text style={styles.header}>Bildirimler</Text>}
         />
       </View>
     </SafeAreaView>
   );
 };
 
-
-
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#fff",
+  
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
-    top: -72
   },
   header: {
     fontSize: 18,
     fontWeight: "700",
     color: "#00A7C0",
-    marginVertical: 16,
-    top: -2
+    paddingTop: 8,
+    paddingBottom: 12,
   },
   listContainer: {
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+  },
+  centerText: {
+    marginTop: 10,
+    color: "#666",
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
 });

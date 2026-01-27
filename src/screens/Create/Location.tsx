@@ -32,7 +32,6 @@ const Location = () => {
   const [districtModalVisible, setDistrictModalVisible] = useState(false);
   const [streetsModalVisible, setStreetsModalVisible] = useState(false);
 
-
   const [countrySearch, setCountrySearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
   const [districtSearch, setDistrictSearch] = useState("");
@@ -156,7 +155,6 @@ const Location = () => {
         <View style={styles.dragIndicator} />
         <Text style={styles.modalTitle}>{title}</Text>
 
-
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={20} color="#999" />
           <TextInput
@@ -246,7 +244,6 @@ const Location = () => {
           />
         </TouchableOpacity>
 
-
         <TouchableOpacity
           style={[styles.inputWrapper, !location.city && styles.disabledWrapper]}
           disabled={!location.city}
@@ -261,7 +258,6 @@ const Location = () => {
             onChangeText={() => {}}
           />
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={[styles.inputWrapper, !location.district && styles.disabledWrapper]}
@@ -278,9 +274,8 @@ const Location = () => {
           />
         </TouchableOpacity>
 
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Açık Adres</Text>
+        <View style={styles.addressWrapper}>
+    
           <TextInputUser
             placeholder="Detaylı adres bilgisi girin"
             value={location.address}
@@ -355,33 +350,32 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 0
   },
   scrollContent: {
-    padding: 0,
-    paddingBottom: 0,
-    marginTop: 20,
+    marginTop: 8,
   },
   sectionHeader: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#00A7C0",
-    marginBottom: 20,
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#25C5D1",
+    marginBottom: 10,
+    marginTop: 10,
   },
   inputWrapper: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   disabledWrapper: {
     opacity: 0.5,
   },
+  addressWrapper: {
+    marginTop: 8,
+  },
   inputLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
+    color: "#25C5D1",
     marginBottom: 8,
   },
-
-
   modal: {
     margin: 0,
     justifyContent: "flex-end",
@@ -401,25 +395,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#DDD",
     borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#00A7C0",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
-
+  // Search
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F5F5F5",
     borderRadius: 10,
     paddingHorizontal: 12,
-    marginBottom: 12,
-    height: 48,
+    marginBottom: 8,
+    height: 44,
   },
   searchInput: {
     flex: 1,
@@ -429,11 +423,12 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
+
   listItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
@@ -443,13 +438,13 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
-
+  // Loader
   loaderContainer: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 32,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 10,
     color: "#999",
     fontSize: 14,
   },
@@ -457,7 +452,7 @@ const styles = StyleSheet.create({
 
   emptyContainer: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 32,
   },
   emptyText: {
     color: "#999",
@@ -467,10 +462,10 @@ const styles = StyleSheet.create({
 
   closeButton: {
     backgroundColor: "#F0F0F0",
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 12,
   },
   closeButtonText: {
     fontSize: 15,

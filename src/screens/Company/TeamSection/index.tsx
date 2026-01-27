@@ -8,6 +8,7 @@ import {
   Linking,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 
@@ -28,9 +29,15 @@ interface Personal {
 interface TeamSectionProps {
   team: Personal[];
   loading: boolean;
+  onToggleStatus?: (personalId: number, currentStatus: boolean) => void;
 }
 
-const PersonalCard: React.FC<{ personal: Personal }> = ({ personal }) => {
+interface PersonalCardProps {
+  personal: Personal;
+  onToggleStatus?: (personalId: number, currentStatus: boolean) => void;
+}
+
+const PersonalCard: React.FC<PersonalCardProps> = ({ personal, onToggleStatus }) => {
   const avatarUrl = personal.avatar?.includes("svg")
     ? personal.avatar.replace("format=svg", "format=png")
     : personal.avatar;
@@ -52,6 +59,27 @@ const PersonalCard: React.FC<{ personal: Personal }> = ({ personal }) => {
     if (phone?.number && phone.number !== "null") {
       Linking.openURL(`tel:+${phone.code}${phone.number.replace(/\D/g, "")}`);
     }
+  };
+
+  const handleToggleStatus = () => {
+    const newStatus = !personal.is_active;
+    const actionText = newStatus ? "aktif" : "pasif";
+    
+    Alert.alert(
+      "Durum Değiştir",
+      `${personal.name} adlı personeli ${actionText} yapmak istiyor musunuz?`,
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Evet",
+          onPress: () => {
+            if (onToggleStatus) {
+              onToggleStatus(personal.id, personal.is_active ?? false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -83,12 +111,15 @@ const PersonalCard: React.FC<{ personal: Personal }> = ({ personal }) => {
           </Text>
         </View>
 
+        {/* Aktif/Pasif Butonu - Tıklanabilir */}
         {personal.is_active !== undefined && (
-          <View
+          <TouchableOpacity
             style={[
               styles.statusBadge,
               personal.is_active ? styles.activeBadge : styles.inactiveBadge,
             ]}
+            onPress={handleToggleStatus}
+            activeOpacity={0.7}
           >
             <Text
               style={[
@@ -98,7 +129,7 @@ const PersonalCard: React.FC<{ personal: Personal }> = ({ personal }) => {
             >
               {personal.is_active ? "Aktif" : "Pasif"}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
 
         {personal.contacts_can_visible && (
@@ -129,7 +160,7 @@ const PersonalCard: React.FC<{ personal: Personal }> = ({ personal }) => {
   );
 };
 
-const TeamSection: React.FC<TeamSectionProps> = ({ team, loading }) => {
+const TeamSection: React.FC<TeamSectionProps> = ({ team, loading, onToggleStatus }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -150,7 +181,12 @@ const TeamSection: React.FC<TeamSectionProps> = ({ team, loading }) => {
     <FlatList
       data={team}
       keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => <PersonalCard personal={item} />}
+      renderItem={({ item }) => (
+        <PersonalCard 
+          personal={item} 
+          onToggleStatus={onToggleStatus}
+        />
+      )}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.listContainer}
     />
@@ -218,8 +254,8 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: 12,
     marginTop: 10,
   },
@@ -230,7 +266,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8d7da",
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
   },
   activeText: {

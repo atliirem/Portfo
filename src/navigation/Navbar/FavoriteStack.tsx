@@ -4,11 +4,15 @@ import Favorite from "../../screens/Favorite";
 import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
 import TopBar from "../TopBar";
 import {DetailAlerts} from "../../screens/Detail/DetailAlerts";
+import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
+import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
 
 export type FavoriteStackParamList = {
   Favorite: undefined;
   PropertiesDetailScreen: { id: number };
   DetailAlerts: undefined;
+  SelectedPropertiesScreen: undefined;
+  CompanyDetailScreen: {id: number}
   
   
 };
@@ -26,6 +30,15 @@ export default function FavoriteStack() {
           header: () => <TopBar />, 
         }}
       />
+
+             <Stack.Screen
+        name="CompanyDetailScreen"
+        component={CompanyDetailScreen}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
+
       <Stack.Screen
         name="DetailAlerts"
         component={DetailAlerts}
@@ -33,6 +46,11 @@ export default function FavoriteStack() {
           header: () => <TopBar />,
         }}
       /> 
+        <Stack.Screen
+  name="SelectedPropertiesScreen"
+  component={SelectedPropertiesScreen}
+  options={{ title: "Seçilen İlanlar" }}
+/>
 
 
       <Stack.Screen

@@ -1,162 +1,246 @@
+import React, { useState } from "react";
 import {
-  ScrollView,
   View,
   Text,
+  StyleSheet,
   ActivityIndicator,
+  ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../redux/Hooks";
-import { getPropertyFeatures } from "../../../../api";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
 
-export const BannerDetail = ({ id }: { id: number }) => {
-  const dispatch = useAppDispatch();
-  const { titles, groups, loading } = useAppSelector(
-    (state) => state.features
+
+interface BannerDetailProps {
+  id: number;
+  isDraft?: boolean;
+}
+
+export const BannerDetail: React.FC<BannerDetailProps> = ({ id, isDraft = false }) => {
+  const { groups, loading, propertyId } = useSelector(
+    (state: RootState) => state.features.detail
   );
 
-  const [selectedTitle, setSelectedTitle] = useState<string>("");
-
-  useEffect(() => {
-    dispatch(getPropertyFeatures(id));
-  }, [id]);
-
-  useEffect(() => {
-    if (titles.length > 0) {
-      setSelectedTitle(titles[0]);
-    }
-  }, [titles]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [expandedFeatures, setExpandedFeatures] = useState<Set<number>>(new Set());
 
   if (loading) {
     return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-      >
-        <ActivityIndicator size="large" color="#1a8b95" />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color="#25C5D1" />
       </View>
     );
   }
 
-  if (!titles || titles.length === 0) {
-    return (
-      <Text style={{ padding: 12, color: "#333" }}>
-        Başlık bulunamadı.
-      </Text>
-    );
+  if (propertyId !== id) {
+    return null;
   }
 
-  const selectedGroup = groups.find((g) => g.title === selectedTitle);
+  if (!groups || groups.length === 0) {
+    return null;
+  }
+
+  const formatValue = (feature: any): string => {
+    const { value, input_type } = feature;
+
+    if (value === null || value === undefined || value === "") {
+      return "-";
+    }
+
+    if (input_type === "file") {
+      if (Array.isArray(value)) {
+        return value.map((f) => f.name).join(", ");
+      }
+      if (typeof value === "object" && value.name) {
+        return value.name;
+      }
+      return "-";
+    }
+
+    if (typeof value === "object" && value.min !== undefined) {
+      if (value.min === value.max) {
+        return String(value.min);
+      }
+      return `${value.min} - ${value.max}`;
+    }
+
+    if (typeof value === "object" && value.title) {
+      return value.title;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((v) => (typeof v === "object" ? v.title || v.name : v))
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    return String(value);
+  };
+
+  const shouldShowFeature = (feature: any): boolean => {
+    if (feature.details?.is_hidden === "1" || feature.details?.is_hidden === true) {
+      return false;
+    }
+    if (feature.value === null || feature.value === undefined || feature.value === "") {
+      return false;
+    }
+    return true;
+  };
+
+  const toggleExpand = (featureId: number) => {
+    setExpandedFeatures(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(featureId)) {
+        newSet.delete(featureId);
+      } else {
+        newSet.add(featureId);
+      }
+      return newSet;
+    });
+  };
+
+  const activeGroup = groups[activeTab];
+  const visibleFeatures = activeGroup?.features.filter(shouldShowFeature) || [];
 
   return (
-    <View>
-    
+    <View style={styles.container}>
+   
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ padding: 10 }}
+        style={styles.tabScrollView}
+        contentContainerStyle={styles.tabContainer}
       >
-        {titles.map((item: string, index: number) => {
-          const isSelected = selectedTitle === item;
-
-          return (
-            <TouchableOpacity
-              key={index}
-              onPress={() => setSelectedTitle(item)}
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 6,
-                backgroundColor: isSelected ? "#fff" : "#eaebec",
-                marginRight: 10,
-                minHeight: 52,
-                marginTop: -10,
-                left: -10,
-                justifyContent: "center",
-                borderColor: isSelected ? "#000" : "#fff",
-                borderWidth: 0.6,
-              }}
-            >
-              <Text
-                style={{
-                  color: isSelected ? "black" : "#707171",
-                  fontWeight: "500",
-                }}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {groups.map((group, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.tab, activeTab === index && styles.activeTab]}
+            onPress={() => setActiveTab(index)}
+          >
+            <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>
+              {group.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
-
-      <View style={{ paddingHorizontal: 16, paddingTop: 6 }}>
-        {selectedGroup?.features?.map((feat) => (
-          <View
-            key={feat.id}
-            style={{
-              paddingVertical: 10,
-              borderBottomWidth: 0.4,
-              borderColor: "#ccc",
-            }}
-          >
-         
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 15,
-                  color: "#222",
-                  fontWeight: "600",
-                }}
+     
+      {!isDraft && (
+        <View style={styles.featureList}>
+          {visibleFeatures.map((feature, index) => {
+            const isExpanded = expandedFeatures.has(feature.id);
+            const valueText = formatValue(feature);
+            
+            return (
+              <TouchableOpacity
+                key={feature.id}
+                style={[
+                  styles.featureRow,
+                  index % 2 === 0 && styles.featureRowAlt,
+                ]}
+                onPress={() => toggleExpand(feature.id)}
+                activeOpacity={0.7}
               >
-                {feat.title}
-              </Text>
+                <Text style={styles.featureTitle}>{feature.title}</Text>
+                <Text 
+                  style={[
+                    styles.featureValue,
+                    isExpanded && styles.featureValueExpanded
+                  ]} 
+                  numberOfLines={isExpanded ? undefined : 2}
+                >
+                  {valueText}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
 
-              <Text style={{ fontSize: 14, color: "#555" }}>
-                {typeof feat.value === "object" || Array.isArray(feat.value)
-                  ? "-"
-                  : feat.value ?? "-"}
-              </Text>
+          {visibleFeatures.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Bu kategoride bilgi bulunmuyor</Text>
             </View>
-
-
-            {feat.childrens?.length > 0 &&
-              feat.childrens.map((child) => (
-                <View key={child.id} style={{ marginTop: 10, marginLeft: 10 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: "#333",
-                    }}
-                  >
-                    {child.title}
-                  </Text>
-
-                 
-                  {child.options?.map((opt) => (
-                    <Text
-                      key={opt.id}
-                      style={{
-                        fontSize: 13,
-                        color: "#555",
-                        marginLeft: 12,
-                        marginTop: 2,
-                      }}
-                    >
-                      - {opt.title}
-                    </Text>
-                  ))}
-                </View>
-              ))}
-          </View>
-        ))}
-      </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 12,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  tabScrollView: {
+    marginBottom: 8,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: "#f5f5f5",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  activeTab: {
+    backgroundColor: "#fff",
+    borderColor: "#333",
+    borderWidth: 0.6,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#888",
+  },
+  activeTabText: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  featureList: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  featureRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+  },
+  featureRowAlt: {
+    backgroundColor: "#f8f8f8",
+  },
+  featureTitle: {
+    fontSize: 15,
+    color: "#333",
+    flex: 1,
+  },
+  featureValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "right",
+    maxWidth: "50%",
+  },
+  featureValueExpanded: {
+    maxWidth: "60%",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: "#999",
+    fontSize: 14,
+  },
+});

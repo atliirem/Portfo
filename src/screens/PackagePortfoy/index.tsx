@@ -34,13 +34,11 @@ const MySubscriptionsScreen = () => {
   const [usageVisible, setUsageVisible] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
 
-  /* 🔹 AKTİF ABONELİKLER + PAKETLER */
   useEffect(() => {
     dispatch(getAllSubsrictions());
     dispatch(getAllPackage());
   }, [dispatch]);
 
-  /* 🔹 SEÇİLİ ABONELİĞİN PAKETİ */
   const selectedPackage = packages.find(
     (p) => p.title === selectedSubscription?.package
   );
@@ -93,7 +91,6 @@ const MySubscriptionsScreen = () => {
     </>
   );
 
-  /* 🔹 LOADING / ERROR */
   if (loadingActive || loadingPackages) {
     return (
       <SafeAreaView style={styles.center}>
@@ -128,7 +125,7 @@ const MySubscriptionsScreen = () => {
         contentContainerStyle={styles.list}
       />
 
-      {/* 🔹 DAHİL OLAN ÖZELLİKLER MODAL */}
+    
       <Modal
         isVisible={featuresVisible}
         onBackdropPress={() => setFeaturesVisible(false)}

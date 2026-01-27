@@ -13,7 +13,7 @@ interface CurrencyState {
   loading: boolean;
   error: string | null;
   selectedCurrencyId: number | null;
-  selectedCurrencyCode: string | null; // ✅ Filtreleme için eklendi
+  selectedCurrencyCode: string | null; 
 }
 
 const initialState: CurrencyState = {
@@ -28,10 +28,10 @@ const currenciesSlice = createSlice({
   name: "currencies",
   initialState,
   reducers: {
-    // ✅ ID ile seçim (mevcut - form için)
+
     setSelectedCurrency: (state, action: PayloadAction<number | null>) => {
       state.selectedCurrencyId = action.payload;
-      // Code'u da güncelle
+
       if (action.payload) {
         const currency = state.data.find((c) => c.id === action.payload);
         state.selectedCurrencyCode = currency?.code || null;
@@ -39,10 +39,10 @@ const currenciesSlice = createSlice({
         state.selectedCurrencyCode = null;
       }
     },
-    // ✅ Code ile seçim (filtreleme için)
+
     setSelectedCurrencyCode: (state, action: PayloadAction<string | null>) => {
       state.selectedCurrencyCode = action.payload;
-      // ID'yi de güncelle
+
       if (action.payload) {
         const currency = state.data.find((c) => c.code === action.payload);
         state.selectedCurrencyId = currency?.id || null;

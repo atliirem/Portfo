@@ -57,17 +57,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 10,
-    marginTop: -50,
+    paddingHorizontal: 20,
+    marginTop: -40,
+    paddingVertical: 20,
   },
   header: {
     fontSize: 18,
     fontWeight: "700",
     color: "#00A7C0",
-    marginBottom: 12,
+    marginBottom: 15,
   },
   listContainer: {
     paddingBottom: 30,
+    marginBottom: 20,
   },
   center: {
     flex: 1,

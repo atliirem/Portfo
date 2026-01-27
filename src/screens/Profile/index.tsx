@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -15,12 +15,15 @@ import { ProfileButton } from "../../components/Buttons/profileButton";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "../../navigation/Navbar/ProfileStack"; 
+import LogoutModal from "../../components/Modal/LogoutModal";
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
 const Profile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NavigationProp>();
+
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const { user } = useSelector((state: RootState) => state.auth);
   const { company, loading, error } = useSelector(
@@ -71,7 +74,7 @@ const Profile: React.FC = () => {
             />
           )}
           <View style={styles.textbox}>
-            <Text style={styles.header}>Hoş geldiniz,</Text>
+            <Text style={styles.header}>Hoş geldiniz</Text>
             <Text style={styles.value}>{user.name}</Text>
             {user.roles?.length ? (
               <Text style={styles.valueOrange}>{user.roles[0].title}</Text>
@@ -133,6 +136,7 @@ const Profile: React.FC = () => {
                   width={155}
                   height={33}
                   marginTop={0}
+                   onPress={() => navigation.navigate("EditCompany")}
 
                 />
               </View>
@@ -187,7 +191,15 @@ const Profile: React.FC = () => {
           onPress={() => navigation.navigate("ChangePassword")}
         />
         <AccountItems label="Dil Seçimi" />
-        <AccountItems label="Çıkış Yap" />
+       <AccountItems
+  label="Çıkış Yap"
+  onPress={() => setLogoutModalVisible(true)}
+/>
+
+<LogoutModal
+  visible={logoutModalVisible}
+  onClose={() => setLogoutModalVisible(false)}
+/>
         <AccountItems label="Hesabımı Sil" color="red" />
 
 
@@ -212,7 +224,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 10,
-    marginTop: -35
+    marginTop: -55, 
+    paddingBottom: 60,
   },
   center: {
     flex: 1,
@@ -307,3 +320,5 @@ const styles = StyleSheet.create({
   }
 
 });
+
+

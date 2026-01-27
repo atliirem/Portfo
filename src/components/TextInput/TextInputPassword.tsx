@@ -1,4 +1,4 @@
-import Ionicons from "react-native-vector-icons/Ionicons";
+import Ionicons from '@react-native-vector-icons/ionicons';
 import React, { useState } from 'react';
 import {
   View,

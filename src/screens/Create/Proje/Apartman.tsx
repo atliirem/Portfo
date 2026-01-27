@@ -21,7 +21,6 @@ import { getTypes, getCurrencies } from "../../../../api";
 import TextInputUser from "../../../components/TextInput/TextInputUser";
 import ChildrenModal from "./ChildrenModal";
 
-
 import {
   setPrice,
   setProject,
@@ -30,6 +29,7 @@ import {
   setLicenceFile,
 } from "../../../redux/Slice/formSlice";
 import FilePicker, { SelectedFile } from "../../../components/UploadFile/FileUploadExample";
+import FileInputRPicker from "../../../components/UploadFile/FileUploadR";
 
 const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -58,7 +58,6 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
     dispatch(getTypes());
     dispatch(getCurrencies());
   }, [dispatch]);
-
 
   useEffect(() => {
     if (createAdData.licenceFile) {
@@ -154,13 +153,13 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Proje Apartman</Text>
 
           <TouchableOpacity
             onPress={() => setRoomModalVisible(true)}
-            style={{ marginTop: 10 }}
+            style={styles.inputWrapper}
           >
             <TextInputUser
               isModal={true}
@@ -180,7 +179,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             onSelect={(item) => handleRoomSelect(item.title)}
           />
 
-          <View style={styles.textInput}>
+          <View style={styles.inputWrapper}>
             <TextInputUser
               placeholder="Metrekare (m2) min"
               keyboardType="numeric"
@@ -190,7 +189,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             />
           </View>
 
-          <View style={styles.textInput}>
+          <View style={styles.inputWrapper}>
             <TextInputUser
               placeholder="Metrekare (m2) max"
               value={createAdData.project.max}
@@ -200,7 +199,8 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             />
           </View>
 
-          <View style={{ marginTop: 15 }}>
+
+          <View style={styles.sectionBlock}>
             <Text style={styles.sectionHeader}>Fiyat Bilgileri</Text>
 
             <TouchableOpacity onPress={() => setCurrencyModalVisible(true)}>
@@ -225,7 +225,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
 
               {currenciesLoading && <ActivityIndicator color="#00A7C0" />}
               {currenciesError && (
-                <Text style={{ color: "red" }}>{currenciesError}</Text>
+                <Text style={styles.errorText}>{currenciesError}</Text>
               )}
 
               <FlatList
@@ -251,49 +251,50 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
             </View>
           </Modal>
 
-          <View style={{ marginTop: 20 }}>
+          {/* Fiyat Seçenekleri */}
+          <View style={styles.sectionBlock}>
             <Text style={styles.sectionHeader}>Fiyat Seçenekleri</Text>
 
-            <View style={styles.info}>
+            <View style={styles.infoBox}>
               <Text style={styles.infoText}>
                 Aynı fiyat aralığındaki daireleri tek bir giriş altında
                 tanımlayabilirsiniz.
               </Text>
             </View>
 
-            <View>
-              {createAdData.project.priceOptions.map((value, index) => (
-                <TextInputUser
-                  key={index}
-                  value={value}
-                  onChangeText={(text) => handleUpdatePriceOption(text, index)}
-                  placeholder={`${index + 1}. Fiyat Seçeneği`}
-                  containerStyle={styles.input}
-                />
-              ))}
+            {createAdData.project.priceOptions.map((value, index) => (
+              <TextInputUser
+                key={index}
+                value={value}
+                onChangeText={(text) => handleUpdatePriceOption(text, index)}
+                placeholder={`${index + 1}. Fiyat Seçeneği`}
+                containerStyle={styles.input}
+              />
+            ))}
 
-              <TouchableOpacity
-                onPress={handleAddPriceOption}
-                style={styles.buttonnew}
-              >
-                <Text style={styles.buttonText}>Yeni Fiyat Ekle</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleAddPriceOption}
+              style={styles.addButton}
+            >
+              <Text style={styles.buttonText}>Yeni Fiyat Ekle</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Yetki Belgesi */}
-          <View style={{ marginTop: 20 }}>
-            <Text style={styles.sectionHeader}>Yetki Belgesi</Text>
 
-            <FilePicker
-              placeholder="Yetki belgesi seçin (PDF veya Resim)"
-              value={licenceFile}
-              onFileSelect={handleFileSelect}
-              allowedTypes={["pdf", "image"]}
-              maxFileSize={5}
-            />
+          <View style={styles.sectionBlock}>
+            <Text style={styles.sectionHeader1}>Yetki Belgesi</Text>
 
-            <View style={styles.info}>
+          <FileInputRPicker
+  label="."
+  value={licenceFile}
+  onChange={handleFileSelect}
+  allowedTypes={["pdf", "image"]}
+  maxFileSize={5}
+  errorText={null} 
+/>
+
+
+            <View style={styles.infoBox}>
               <Text style={styles.infoText}>
                 Emlak firması olarak belirli sayıda bir daireyi satmak
                 istiyorsanız yetki belgesini yüklemelisiniz.
@@ -302,7 +303,7 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
 
             <TouchableOpacity
               onPress={handleDownloadPress}
-              style={styles.buttonnewORANGE}
+              style={styles.downloadButton}
             >
               <Text style={styles.buttonText}>ŞABLON İNDİR</Text>
             </TouchableOpacity>
@@ -316,21 +317,51 @@ const Apartman = ({ onValidate }: { onValidate: (fn: () => boolean) => void }) =
 export default Apartman;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
-  section: { marginTop: 10 },
+  safeArea: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
+  scrollContent: {
+    paddingBottom: 0,
+  },
+  section: { 
+    marginTop: -2
+  },
+  sectionBlock: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
   sectionHeader: {
     fontSize: 16,
     fontWeight: "800",
     color: "#25C5D1",
-    marginBottom: 10,
+    marginBottom: 1,
+    marginTop: -1
+    
   },
-  textInput: { marginTop: 12 },
+   sectionHeader1: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#25C5D1",
+    marginBottom: 12,
+    marginTop: -1
+    
+  },
+  inputWrapper: {
+    marginTop: 10,
+  },
   errorInput: {
     borderWidth: 1.5,
     borderColor: "red",
     borderRadius: 8,
   },
-  modal: { margin: 0, justifyContent: "flex-end" },
+  errorText: {
+    color: "red",
+  },
+  modal: { 
+    margin: 0, 
+    justifyContent: "flex-end" 
+  },
   modalContainer: {
     backgroundColor: "white",
     padding: 20,
@@ -348,10 +379,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
-  info: {
+  infoBox: {
     backgroundColor: "#fff4cd",
     padding: 10,
     borderRadius: 6,
+    marginBottom: 10,
     marginTop: 10,
   },
   infoText: {
@@ -360,23 +392,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#1b1a16",
   },
-  buttonnew: {
+  addButton: {
     width: "100%",
     backgroundColor: "#25C5D1",
     height: 45,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 6.5,
-    marginTop: 15,
+    marginTop: 4,
   },
-  buttonnewORANGE: {
+  downloadButton: {
     width: "100%",
     backgroundColor: "#ffca63",
     height: 45,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 6.5,
-    marginTop: 15,
   },
   buttonText: {
     color: "#fff",
@@ -385,7 +416,6 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    marginTop: 10,
-    marginBottom: 10,
+    marginBottom: 8,
   },
 });

@@ -47,7 +47,7 @@ interface TypeState {
   features: Feature[];
   loading: boolean;
   error: string | null;
-  selectedTypes: number[]; // ✅ string[] → number[]
+  selectedTypes: number[]; 
 }
 
 const initialState: TypeState = {
@@ -101,7 +101,7 @@ const typesSlice = createSlice({
   name: "types",
   initialState,
   reducers: {
-    // ✅ number[] olarak güncellendi
+
     setSelectedTypes: (state, action: PayloadAction<number[]>) => {
       state.selectedTypes = action.payload;
     },

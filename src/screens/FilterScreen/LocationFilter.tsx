@@ -81,15 +81,15 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
     <Modal
       isVisible={isVisible}
       onBackdropPress={onClose}
-      onSwipeComplete={onClose}
-      swipeDirection="down"
       style={styles.modal}
       propagateSwipe
+      avoidKeyboard
     >
       <View style={styles.sheet}>
         <View style={styles.dragIndicator} />
         <Text style={styles.title}>Konum</Text>
 
+        {/* ScrollView kalsın ki içerik dar ekranlarda rahat olsun */}
         <ScrollView
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -116,6 +116,8 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
               search
               searchPlaceholder="Ara..."
               onChange={handleCountryChange}
+              maxHeight={260}
+              dropdownPosition="auto"
             />
           )}
 
@@ -141,6 +143,8 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
               labelField="label"
               valueField="value"
               onChange={handleCityChange}
+              maxHeight={260}
+              dropdownPosition="auto"   // ✅ taşma olmasın, yukarı açılsın
             />
           )}
 
@@ -166,6 +170,8 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
               labelField="label"
               valueField="value"
               onChange={handleDistrictChange}
+              maxHeight={260}
+              dropdownPosition="top"  
             />
           )}
 
@@ -191,10 +197,11 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
               labelField="label"
               valueField="value"
               onChange={handleStreetChange}
+              maxHeight={260}
+              dropdownPosition="top"   // ✅ yukarı açılsın
             />
           )}
 
-          {/* Butonlar */}
           <View style={styles.buttons}>
             <TouchableOpacity
               style={[styles.clearButton, !hasSelection && styles.disabledButton]}
@@ -205,14 +212,13 @@ const LocationFilter = ({ isVisible, onClose }: Props) => {
               <Text style={styles.buttonText}>Temizle</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={onClose}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.applyButton} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.buttonText}>Uygula</Text>
             </TouchableOpacity>
           </View>
+
+          {/* altta biraz boşluk: dropdown taşmasın, scroll rahat olsun */}
+          <View style={{ height: 14 }} />
         </ScrollView>
       </View>
     </Modal>
@@ -232,8 +238,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 24,
-    maxHeight: screenHeight * 0.7,
+    paddingBottom: 18,
+    maxHeight: screenHeight * 0.78, // ✅ biraz daha alan
   },
   dragIndicator: {
     width: 40,
@@ -241,14 +247,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#DDD",
     borderRadius: 2,
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   title: {
     textAlign: "center",
     fontSize: 18,
     fontWeight: "700",
     color: "#00A7C0",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   scrollContent: {
     paddingBottom: 10,
@@ -257,9 +263,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
     color: "#333",
-    marginTop: 16,
+    marginTop: 14,
     marginBottom: 8,
   },
+
   dropdown: {
     borderWidth: 1,
     borderColor: "#E0E0E0",
@@ -275,6 +282,7 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     borderRadius: 10,
     borderColor: "#E0E0E0",
+    overflow: "hidden",
   },
   placeholder: {
     color: "#999",
@@ -300,7 +308,7 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: "row",
-    marginTop: 24,
+    marginTop: 18,
     gap: 12,
   },
   clearButton: {

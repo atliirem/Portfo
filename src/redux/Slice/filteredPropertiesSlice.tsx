@@ -46,19 +46,19 @@ const filteredPropertiesSlice = createSlice({
       })
       .addCase(getFilteredProperties.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ Her sayfa değişiminde yeni veri göster (append değil, replace)
+
         state.data = action.payload.data || [];
         state.pagination = action.payload.pagination || initialState.pagination;
         
-        // DEBUG
-        console.log("✅ Slice Updated:");
+
+        console.log(" Slice Updated:");
         console.log("  - Data count:", state.data.length);
         console.log("  - Pagination:", state.pagination);
       })
       .addCase(getFilteredProperties.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) || "Bir hata oluştu";
-        console.log("❌ Slice Error:", state.error);
+        console.log("Slice Error:", state.error);
       });
   },
 });

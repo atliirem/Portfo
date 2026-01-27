@@ -8,12 +8,13 @@ import {
   FlatList,
   ActivityIndicator,
   TextInput,
+  Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import Modal from "react-native-modal";
 import { useAppDispatch, useAppSelector } from "../../redux/Hooks";
-
 import { setSelectedCurrency, clearSelectedCurrency } from "../../redux/Slice/currenciesSlice";
-import { getCurrencies } from "../../../api";
+import { getCurrencies, getFilteredProperties } from "../../../api";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { clearPrice, setMaxPrice, setMinPrice } from "../../redux/Slice/priceCodeSlice";
 
@@ -35,15 +36,13 @@ const PriceFilterModal = ({ isVisible, onClose }: Props) => {
   const [localMin, setLocalMin] = useState("");
   const [localMax, setLocalMax] = useState("");
   const [localCurrencyId, setLocalCurrencyId] = useState<number | null>(null);
-  const [showCurrencyList, setShowCurrencyList] = useState(false); 
+  const [showCurrencyList, setShowCurrencyList] = useState(false);
 
--
   useEffect(() => {
     if (currencies.length === 0) {
       dispatch(getCurrencies());
     }
   }, [dispatch, currencies.length]);
-
 
   useEffect(() => {
     if (isVisible) {
@@ -54,19 +53,33 @@ const PriceFilterModal = ({ isVisible, onClose }: Props) => {
     }
   }, [isVisible, storedMin, storedMax, selectedCurrencyId]);
 
-  const handleClear = () => {
+  const handleClear = async () => {
     setLocalMin("");
     setLocalMax("");
     setLocalCurrencyId(null);
-    dispatch(clearPrice());
-    dispatch(clearSelectedCurrency());
+    
+    await dispatch(clearPrice());
+    await dispatch(clearSelectedCurrency());
+    
+    // Modal kapandıktan sonra API çağır
+    onClose();
+    
+    setTimeout(() => {
+      dispatch(getFilteredProperties(1));
+    }, 200);
   };
 
-  const handleApply = () => {
-    dispatch(setMinPrice(localMin || null));
-    dispatch(setMaxPrice(localMax || null));
-    dispatch(setSelectedCurrency(localCurrencyId));
+  const handleApply = async () => {
+    await dispatch(setMinPrice(localMin || null));
+    await dispatch(setMaxPrice(localMax || null));
+    await dispatch(setSelectedCurrency(localCurrencyId));
+    
+    // Modal kapandıktan sonra API çağır
     onClose();
+    
+    setTimeout(() => {
+      dispatch(getFilteredProperties(1));
+    }, 200);
   };
 
   const handleCurrencySelect = (currency: any) => {
@@ -76,8 +89,120 @@ const PriceFilterModal = ({ isVisible, onClose }: Props) => {
 
   const hasValue = !!localMin || !!localMax || !!localCurrencyId;
 
-
   const selectedCurrencyInfo = currencies.find((c) => c.id === localCurrencyId);
+
+  const renderContent = () => (
+    <View style={styles.sheet}>
+      <View style={styles.dragIndicator} />
+      <Text style={styles.title}>Fiyat</Text>
+
+      {showCurrencyList ? (
+        <View style={styles.currencyListContainer}>
+          <View style={styles.currencyHeader}>
+            <TouchableOpacity onPress={() => setShowCurrencyList(false)}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.currencyHeaderText}>Para Birimi Seç</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          {currenciesLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#00A7C0" />
+            </View>
+          ) : (
+            <FlatList
+              data={currencies}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.currencyItem,
+                    localCurrencyId === item.id && styles.currencyItemActive,
+                  ]}
+                  onPress={() => handleCurrencySelect(item)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.currencyItemText,
+                      localCurrencyId === item.id && styles.currencyItemTextActive,
+                    ]}
+                  >
+                    {item.title} ({item.symbol})
+                  </Text>
+                  {localCurrencyId === item.id && (
+                    <Ionicons name="checkmark" size={22} color="#00A7C0" />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
+      ) : (
+        <View>
+          <Text style={styles.label}>Para Birimi</Text>
+          <TouchableOpacity
+            style={styles.currencySelector}
+            onPress={() => setShowCurrencyList(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.currencyText, !localCurrencyId && styles.placeholderText]}>
+              {selectedCurrencyInfo
+                ? `${selectedCurrencyInfo.title} (${selectedCurrencyInfo.symbol})`
+                : "Para birimi seç"}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </TouchableOpacity>
+
+          <Text style={styles.label}>Minimum Fiyat</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Örn: 100000"
+              placeholderTextColor="#999"
+              value={localMin}
+              onChangeText={setLocalMin}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <Text style={styles.label}>Maksimum Fiyat</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Örn: 500000"
+              placeholderTextColor="#999"
+              value={localMax}
+              onChangeText={setLocalMax}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.buttons}>
+            <TouchableOpacity
+              style={[styles.clearButton, !hasValue && styles.disabledButton]}
+              onPress={handleClear}
+              disabled={!hasValue}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.buttonText}>Temizle</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={handleApply}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.buttonText}>Uygula</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <Modal
@@ -87,123 +212,19 @@ const PriceFilterModal = ({ isVisible, onClose }: Props) => {
       onSwipeComplete={onClose}
       style={styles.modal}
       propagateSwipe
+      avoidKeyboard={Platform.OS === "ios"}
     >
-      <View style={styles.sheet}>
-        <View style={styles.dragIndicator} />
-        <Text style={styles.title}>Fiyat</Text>
-
- 
-        {showCurrencyList ? (
-
-          <View style={styles.currencyListContainer}>
-            <View style={styles.currencyHeader}>
-              <TouchableOpacity onPress={() => setShowCurrencyList(false)}>
-                <Ionicons name="arrow-back" size={24} color="#333" />
-              </TouchableOpacity>
-              <Text style={styles.currencyHeaderText}>Para Birimi Seç</Text>
-              <View style={{ width: 24 }} />
-            </View>
-
-            {currenciesLoading ? (
-              <View style={styles.loaderContainer}>
-                <ActivityIndicator size="large" color="#00A7C0" />
-              </View>
-            ) : (
-              <FlatList
-                data={currencies}
-                keyExtractor={(item) => item.id.toString()}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.currencyItem,
-                      localCurrencyId === item.id && styles.currencyItemActive,
-                    ]}
-                    onPress={() => handleCurrencySelect(item)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.currencyItemText,
-                        localCurrencyId === item.id && styles.currencyItemTextActive,
-                      ]}
-                    >
-                      {item.title} ({item.symbol})
-                    </Text>
-                    {localCurrencyId === item.id && (
-                      <Ionicons name="checkmark" size={22} color="#00A7C0" />
-                    )}
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-        ) : (
-     
-          <View>
-  
-            <Text style={styles.label}>Para Birimi</Text>
-            <TouchableOpacity
-              style={styles.currencySelector}
-              onPress={() => setShowCurrencyList(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.currencyText, !localCurrencyId && styles.placeholderText]}>
-                {selectedCurrencyInfo
-                  ? `${selectedCurrencyInfo.title} (${selectedCurrencyInfo.symbol})`
-                  : "Para birimi seç"}
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-
-       
-            <Text style={styles.label}>Minimum Fiyat</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Örn: 100000"
-                placeholderTextColor="#999"
-                value={localMin}
-                onChangeText={setLocalMin}
-                keyboardType="numeric"
-              />
-            </View>
-
-
-            <Text style={styles.label}>Maksimum Fiyat</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Örn: 500000"
-                placeholderTextColor="#999"
-                value={localMax}
-                onChangeText={setLocalMax}
-                keyboardType="numeric"
-              />
-            </View>
-
- 
-            <View style={styles.buttons}>
-              <TouchableOpacity
-                style={[styles.clearButton, !hasValue && styles.disabledButton]}
-                onPress={handleClear}
-                disabled={!hasValue}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.buttonText}>Temizle</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.applyButton}
-                onPress={handleApply}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.buttonText}>Uygula</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </View>
+      {Platform.OS === "ios" ? (
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={10}
+          style={styles.keyboardAvoidingView}
+        >
+          {renderContent()}
+        </KeyboardAvoidingView>
+      ) : (
+        renderContent()
+      )}
     </Modal>
   );
 };
@@ -214,6 +235,9 @@ const styles = StyleSheet.create({
   modal: {
     margin: 0,
     justifyContent: "flex-end",
+  },
+  keyboardAvoidingView: {
+    width: "100%",
   },
   sheet: {
     backgroundColor: "#fff",
@@ -303,8 +327,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-
-  // Para Birimi Listesi
   currencyListContainer: {
     minHeight: 300,
   },

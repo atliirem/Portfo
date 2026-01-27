@@ -13,6 +13,7 @@ import {
   getCloneProperty,
   getUpdateSold,
   updatePropertyStatus,
+  updatePropertyLocation,
 } from "../../../api";
 import { getPropertyById } from "../../../api/CreateThunk";
 
@@ -127,9 +128,6 @@ const propertySlice = createSlice({
         state.errorMyList = action.payload as string;
       });
 
-      
-
-
     builder
       .addCase(getProperties.pending, (state) => {
         state.loading = true;
@@ -145,7 +143,6 @@ const propertySlice = createSlice({
         state.errorNews = (action.payload as string) || "İlan detayı alınamadı";
       });
 
-    // ==================== ALL PROPERTIES ====================
     builder
       .addCase(getAllProperties.pending, (state) => {
         state.loading = true;
@@ -230,6 +227,7 @@ const propertySlice = createSlice({
         state.loading = false;
         state.errorMyList = action.payload as string;
       });
+      
 
 
     builder
@@ -274,6 +272,20 @@ const propertySlice = createSlice({
           state.property = { ...state.property, status };
         }
       })
+      .addCase(updatePropertyLocation.fulfilled, (state, action) => {
+  const { propertyId, latitude, longitude } = action.payload;
+  
+  // Mevcut property'yi güncelle
+  if (state.property?.id === propertyId) {
+    state.property = {
+      ...state.property,
+      map: {
+        latitude: latitude.toString(),
+        longitude: longitude.toString(),
+      },
+    };
+  }
+})
       .addCase(updatePropertyStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

@@ -116,7 +116,7 @@
 
 //       console.log("API params:", params);
 
-//       // ✅ Düzeltildi: /front/properties → /properties
+//       //  Düzeltildi: /front/properties → /properties
 //       const res = await api.get("/properties", { params });
 
 //       console.log("API Response:", res.data);

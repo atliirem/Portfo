@@ -15,8 +15,9 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "../../navigation/Navbar/ProfileStack";
 
-import Ionicons from "@react-native-vector-icons/ionicons";
 
+import Ionicons from "@react-native-vector-icons/ionicons";
+import SummaryCharts from "../../screens/Company/CompanySummary/Summarychar";
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
 
@@ -61,12 +62,10 @@ const SummaryComponents: React.FC = () => {
   }
 
   return (
-    <SafeAreaView   style={styles.container} edges={["bottom"]}>
-      <ScrollView style={styles.scroll}
-       showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {company && (
           <>
-         
             <View style={styles.grayCard}>
               <View style={styles.companyHeader}>
                 {company.logo && (
@@ -102,6 +101,8 @@ const SummaryComponents: React.FC = () => {
                   width={320}
                   height={33}
                   marginTop={0}
+                  onPress={() => navigation.navigate("EditCompany" as never)}
+
                 />
                 <ProfileButton
                   label="Portföyüm"
@@ -110,7 +111,7 @@ const SummaryComponents: React.FC = () => {
                   width={320}
                   height={33}
                   marginTop={4}
-                  onPress={()=> navigation.navigate('MyPortfoy')}
+                  onPress={() => navigation.navigate("MyPortfoy")}
                 />
                 <ProfileButton
                   label="Aboneliği Yönet"
@@ -119,24 +120,20 @@ const SummaryComponents: React.FC = () => {
                   width={320}
                   height={33}
                   marginTop={4}
+                  onPress={() => navigation.navigate("MySubscriptionsScreen" as never)}
                 />
               </View>
             </View>
 
-        
             <View style={styles.grayCard}>
               <View style={styles.countCardContainer}>
                 {counts.map((item: any, index: number) => (
                   <View key={index} style={styles.countCard}>
                     <Ionicons
-                    name="search"
-                    size={22}
-                    color={'#9f9e9eff'}
-                    style={{ margin: 7, top: 8 }}
-                      // name="text-box-search-outline"
-                      // size={22}
-                      // color="#9f9e9eff"
-                      // style={{ margin: 7, top: 8 }}
+                      name="search"
+                      size={22}
+                      color={"#9f9e9eff"}
+                      style={{ margin: 7, top: 8 }}
                     />
                     <View style={{ flexDirection: "column" }}>
                       <Text style={styles.countTitle}>{item.title}</Text>
@@ -146,9 +143,13 @@ const SummaryComponents: React.FC = () => {
                 ))}
               </View>
             </View>
+
+            <SummaryCharts />
           </>
         )}
-        <Text>Kategorisine Göre İlanlar</Text>
+
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -157,17 +158,15 @@ const SummaryComponents: React.FC = () => {
 export default SummaryComponents;
 
 const styles = StyleSheet.create({
-  scroll:{
-        paddingBottom: 50 ,
-        marginLeft: 20,
-        marginRight: 20
-  }
-  ,
+  scroll: {
+    paddingBottom: 50,
+    marginLeft: 20,
+    marginRight: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 5,
-    
   },
   center: {
     flex: 1,
@@ -179,8 +178,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-
-
   grayCard: {
     backgroundColor: "#F6F6F6",
     borderRadius: 14,
@@ -192,7 +189,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-
   companyHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -235,8 +231,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
   },
-
-
   countCardContainer: {
     flexDirection: "row",
     flexWrap: "wrap",

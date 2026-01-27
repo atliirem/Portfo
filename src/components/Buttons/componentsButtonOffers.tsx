@@ -3,19 +3,17 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
 type Props = {
   width?: number;
-  height: number;
+  height?: number;
   label: string;
   bg?: string;
   color?: string;
-  marginTop: number;
   isSelected?: boolean;
   onPress?: () => void;
 };
 
 export const ComponentButtonOffers = ({
-  marginTop,
-  height,
-  width,
+  height = 40,
+  width = 105,
   label,
   bg,
   color,
@@ -27,34 +25,36 @@ export const ComponentButtonOffers = ({
       style={[
         styles.button,
         {
-          backgroundColor: isSelected ? "white" : bg || "#f6f6f6",
+          backgroundColor: isSelected ? "#2EC4D6" : bg || "#f6f6f6",
           width,
           height,
-          marginTop,
-        
         },
       ]}
+      activeOpacity={0.8}
       onPress={onPress}
     >
-      <Text style={[styles.text, { 
-        color: isSelected ? "#ffff" : "#bababe"
-         }]}>{label}</Text>
+      <Text
+        style={[
+          styles.text,
+          { color: isSelected ? "#fff" : color || "#bababe" },
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    margin: 6,
-    borderRadius: 4.2,
-    height: 30,
+    marginHorizontal: 6,     
+    borderRadius: 6,
     justifyContent: "center",
     alignItems: "center",
+  
   },
   text: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#fff"
-  
   },
 });

@@ -13,6 +13,11 @@ const TaslakInfo: React.FC<TaslakInfoProps> = ({ propertyId }) => {
   const dispatch = useAppDispatch();
   const { property, loading } = useAppSelector((state) => state.properties);
 
+   if (!property || loading) {
+    return null;
+  }
+
+
   const currentStatus = property?.status || "draft";
 
 
@@ -107,6 +112,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     margin: 16,
+  
     borderRadius: 8,
   },
   publishedContainer: {

@@ -46,7 +46,7 @@ const FirstCard: React.FC<FirstCardProps> = ({
   creator,
   onPress,
 }) => {
-  /** 🔒 IMAGE GUARD (EN KRİTİK KISIM) */
+
   const imageUri =
     image && typeof image === "string" && image.startsWith("http")
       ? image
@@ -65,7 +65,7 @@ const FirstCard: React.FC<FirstCardProps> = ({
           style={styles.image}
           resizeMode="cover"
           onError={() =>
-            console.log("❌ IMAGE LOAD ERROR:", imageUri)
+            console.log(" IMAGE LOAD ERROR:", imageUri)
           }
         />
 
@@ -128,7 +128,7 @@ const FirstCard: React.FC<FirstCardProps> = ({
 
 export default FirstCard;
 
-/* ================= STYLES ================= */
+
 
 const styles = StyleSheet.create({
   card: {

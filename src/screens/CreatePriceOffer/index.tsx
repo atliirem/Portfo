@@ -10,6 +10,7 @@ import {
   getSentOffers,
 } from "../../../api";
 import { resetCreateOffer } from "../../redux/Slice/CreateOffersSlice";
+import { getPropertyById } from "../../../api/CreateThunk";
 
 type Props = {
   visible: boolean;
@@ -36,12 +37,11 @@ const CreateOfferModal: React.FC<Props> = ({
     createOfferData,
   } = useAppSelector((state) => state.createOffers);
 
-  useEffect(() => {
-    if (visible) {
-      dispatch(getProperties());
-    }
-  }, [visible, propertyId]);
-
+useEffect(() => {
+  if (visible && propertyId) {
+    dispatch(getPropertyById(propertyId));
+  }
+}, [visible, propertyId]);
 
 const handleSubmit = async () => {
   if (!price) return;
@@ -54,8 +54,8 @@ const handleSubmit = async () => {
     })
   );
 
-  console.log("🔹 propertyId:", propertyId);
-  console.log("🔹 Teklif sonucu:", result);
+  console.log("propertyId:", propertyId);
+  console.log("Teklif sonucu:", result);
 
   if (getCreatePriceOffer.fulfilled.match(result)) {
     const offersResult = await dispatch(getSentOffers(propertyId));

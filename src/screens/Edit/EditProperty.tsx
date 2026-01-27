@@ -184,7 +184,7 @@ const EditProperty = () => {
         return;
       }
 
-      const ilanNo = response?.data?.property?.no || "-";
+      const ilanNo = response?.data?.property?.no || " ";
 
       await dispatch(getMyProperties(1)).unwrap();
 
@@ -193,7 +193,7 @@ const EditProperty = () => {
           text: "Tamam",
           onPress: () => {
             dispatch(resetCreateAd());
-            navigation.goBack();
+            navigation.navigate('PropertiesScreenProfile' as never);
           },
         },
       ]);
@@ -272,18 +272,20 @@ const EditProperty = () => {
           <Text style={styles.sectionHeader}>Fiyat Bilgileri</Text>
           <View style={styles.rowBetween}>
             <TextInputUser
-              style={{ width: "48%" }}
+              style={styles.priceInput}
+              containerStyle={styles.priceInputContainer}
               placeholder="Pass Fiyatı"
-              value={createAdData.pass.passPrice}
+              value={String(createAdData.pass.passPrice || "")}
               onChangeText={(s) => dispatch(setPass({ passPrice: s }))}
               keyboardType="numeric"
               editable={!isLoading}
             />
 
             <TextInputUser
-              style={{ width: "48%" }}
+              style={styles.priceInput}
+              containerStyle={styles.priceInputContainer}
               placeholder="Satış Fiyatı"
-              value={createAdData.pass.salePrice}
+              value={String(createAdData.pass.salePrice || "")}
               onChangeText={(t) => dispatch(setPass({ salePrice: t }))}
               keyboardType="numeric"
               editable={!isLoading}
@@ -312,7 +314,7 @@ const EditProperty = () => {
             style={[styles.backButton, isLoading && styles.disabledButton]}
             onPress={() => {
               dispatch(resetCreateAd());
-              navigation.goBack();
+              navigation.navigate('Prof');
             }}
             disabled={isLoading}
           >
@@ -339,7 +341,7 @@ const EditProperty = () => {
 export default EditProperty;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff", marginTop: 40 },
+  safeArea: { flex: 1, backgroundColor: "#fff", marginTop: 0 },
   scrollContainer: { paddingHorizontal: 10, paddingBottom: 75 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, fontSize: 16, color: "#666" },
@@ -362,6 +364,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
+    gap: 10,
+  },
+
+  priceInput: {
+    width: "48%",
+  },
+
+  priceInputContainer: {
+    minHeight: 56,
+    paddingVertical: 16,
   },
 
   buttonContainer: {

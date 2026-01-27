@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -9,8 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useDispatch } from "react-redux";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 
 import { AppDispatch } from "../../../redux/store";
@@ -37,7 +36,8 @@ interface PaginationProps {
   onChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ pagination, loading, onChange }) => {
+
+const Pagination = React.memo<PaginationProps>(({ pagination, loading, onChange }) => {
   const { currentPage, lastPage, paginationText } = pagination;
 
   if (lastPage <= 1) return null;
@@ -110,12 +110,11 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, loading, onChange }
       </View>
     </View>
   );
-};
+});
 
 const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NavigationProp>();
-
 
   const { myList, loadingMyList, myListPagination } = useAppSelector(
     (state) => state.properties
@@ -125,7 +124,6 @@ const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
     (state) => state.company
   );
 
-
   const properties = companyId ? companyProperties : myList;
   const loading = companyId ? loadingProperties : loadingMyList;
   const pagination = companyId 
@@ -133,6 +131,7 @@ const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
     : myListPagination;
 
   const [refreshing, setRefreshing] = useState(false);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const lastFetchTime = useRef<number>(0);
   const MIN_FETCH_INTERVAL = 3000;
 
@@ -156,25 +155,27 @@ const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
     [dispatch, companyId]
   );
 
-  useFocusEffect(
-    useCallback(() => {
+  useEffect(() => {
+    if (!initialLoaded && properties.length === 0) {
       fetchProperties(1);
-    }, [fetchProperties])
-  );
+      setInitialLoaded(true);
+    }
+  }, []);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchProperties(1, true);
     setRefreshing(false);
-  };
+  }, [fetchProperties]);
 
-  const goToPage = (page: number) => {
+  const goToPage = useCallback((page: number) => {
     if (page >= 1 && page <= pagination.lastPage && !loading) {
       fetchProperties(page, true);
     }
-  };
+  }, [pagination.lastPage, loading, fetchProperties]);
 
-  const renderCard = ({ item }: any) => (
+
+  const renderCard = useCallback(({ item }: any) => (
     <FirstCard
       title={item.title}
       updated_at={item.updated_at}
@@ -186,16 +187,18 @@ const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
       type={item.type?.title}
       city={item.city?.title}
       district={item.district?.title}
-      onPress={() => navigation.navigate("MyPropertiesDetailScreen", { id: item.id })}
+      onPress={() => navigation.navigate("PropertiesDetailScreen", { id: item.id })}
       videos={[]}
     />
-  );
+  ), [navigation]);
+
+  const keyExtractor = useCallback((item: any) => item.id.toString(), []);
 
   if (loading && properties.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#25C5D1" />
-        <Text style={styles.emptyText}>Yükleniyor...</Text>
+        <Text style={styles.loadingText}>Yükleniyor...</Text>
       </View>
     );
   }
@@ -203,44 +206,60 @@ const PropertiesScreenProfile: React.FC<Props> = ({ companyId }) => {
   if (!loading && properties.length === 0) {
     return (
       <View style={styles.center}>
+        <Ionicons name="home-outline" size={48} color="#ccc" />
         <Text style={styles.emptyText}>İlan bulunamadı</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView edges={['bottom']} style={{ flex: 1, marginTop: -230 }}>
-      <View style={styles.container}>
-        <Text style={styles.header}>
-          İlanlar ({pagination.total || properties.length})
-        </Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>
+        İlanlar ({pagination.total || properties.length})
+      </Text>
 
-        <FlatList
-          data={properties}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderCard}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#25C5D1" />
-          }
-          ListFooterComponent={
-            pagination.lastPage > 1 ? (
-              <Pagination pagination={pagination} loading={loading} onChange={goToPage} />
-            ) : null
-          }
-        />
-      </View>
-    </SafeAreaView>
+      <FlatList
+        data={properties}
+        keyExtractor={keyExtractor}
+        renderItem={renderCard}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#25C5D1" 
+          />
+        }
+        ListFooterComponent={
+          pagination.lastPage > 1 ? (
+            <Pagination 
+              pagination={pagination} 
+              loading={loading} 
+              onChange={goToPage} 
+            />
+          ) : null
+        }
+        
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={5}
+        getItemLayout={undefined}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
 };
 
-export default PropertiesScreenProfile;
+export default React.memo(PropertiesScreenProfile);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
-    marginTop: 230,
+    paddingTop: 16,
+    paddingBottom: 70,
+   
   },
   header: {
     fontSize: 18,
@@ -249,17 +268,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginLeft: 4,
   },
-  listContainer: {
-    paddingBottom: 20,
-  },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
+    color: "#999",
+    marginTop: 8,
   },
   paginationWrapper: {
     paddingVertical: 20,

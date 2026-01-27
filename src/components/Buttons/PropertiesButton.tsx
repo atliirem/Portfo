@@ -5,14 +5,28 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { useWishlistToggle } from "../FavoriteToggle";
 import CreateOfferModal from "../../screens/CreatePriceOffer";
 import SelectCustomerModal from "../../screens/SelectCustomerModal";
-import { addProperty, getCustomer } from "../../utils/offeresStorage"
+import { addProperty, getCustomer } from "../../utils/offeresStorage";
 
 const PropertiesButton = ({ item }: { item: any }) => {
-  const toggleFavorite = useWishlistToggle(item);
   const navigation = useNavigation();
   const [showModal, setShowModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  
+  // Favori durumunu local state'te tut
+  const [isFavorite, setIsFavorite] = useState(item?.in_wishlist ?? false);
+  
+  const toggleFavorite = useWishlistToggle(item);
+
+  // Favori toggle işlemi
+  const handleToggleFavorite = async () => {
+    try {
+      await toggleFavorite();
+      setIsFavorite((prev) => !prev);
+    } catch (error) {
+      console.error("Favori toggle hatası:", error);
+    }
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -21,7 +35,10 @@ const PropertiesButton = ({ item }: { item: any }) => {
         setSelectedCustomer(customer);
       };
       checkCustomer();
-    }, [])
+      
+      // Sayfa focus olduğunda item'ın güncel favori durumunu al
+      setIsFavorite(item?.in_wishlist ?? false);
+    }, [item?.in_wishlist])
   );
 
   const handleAddToList = async () => {
@@ -58,10 +75,16 @@ const PropertiesButton = ({ item }: { item: any }) => {
 
       {/* Favori */}
       <TouchableOpacity
-        style={styles.iconContainerheart}
-        onPress={toggleFavorite}
+        style={[
+          styles.iconContainerheart,
+        ]}
+        onPress={handleToggleFavorite}
       >
-        <Ionicons name="heart-outline" size={25} color="#1a8b95" />
+        <Ionicons
+          name={isFavorite ? "heart" : "heart-outline"}
+          size={25}
+          color={isFavorite ? "#1a8b95" : "#1a8b95"}
+        />
       </TouchableOpacity>
 
       {/* Fiyat Teklifi */}
@@ -126,6 +149,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: 48,
     justifyContent: "center",
+  },
+  iconContainerheartActive: {
+    backgroundColor: "#E53935",
   },
   iconContainerPrice: {
     position: "absolute",

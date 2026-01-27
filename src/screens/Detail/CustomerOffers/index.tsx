@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { AppDispatch, RootState } from "../../../redux/store";
@@ -24,6 +24,10 @@ type NavigationProp = NativeStackNavigationProp<
 
 export const CustomerOffers: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+
+
+  
+  
   const navigation = useNavigation<NavigationProp>();
 
   const {
@@ -40,16 +44,14 @@ export const CustomerOffers: React.FC = () => {
     <OffersCard
       id={item.id}
       title={item.customer?.name || `Teklif #${item.id}`}
-    
+      code={item.code}
       created_at={item.created_at}
       status={item.status}
       company={item.customer?.name}
       property_count={item.property_count}
-      onPress={() =>
-        navigation.navigate("OfffersDetail", { id: item.id,
-})
-      }
-    />
+      onPress={() => navigation.navigate("DetailScreen", {
+        id: item.id, code: item.code,
+      })} image={""} expiry_at={""}    />
   );
 
   const renderEmpty = (text: string) => (

@@ -91,12 +91,12 @@ const MyOfferDetailCard: React.FC<MyOfferDetailCardProps> = ({ data }) => {
 
 const handleReject = async () => {
   await dispatch(replyToOffer({ id: data.id, type: "reject" }));
-  // ❌ getOffersDetail çağırma - slice otomatik güncelleyecek
+ 
 };
 
 const handleConfirm = async () => {
   await dispatch(replyToOffer({ id: data.id, type: "confirm" }));
-  // ❌ getOffersDetail çağırma - slice otomatik güncelleyecek
+  
 };
   return (
     <View style={styles.card}>
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  /* COMPANY HEADER */
+
   companyHeader: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -9,11 +9,13 @@ import {
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { deleteCustomer, getCustomers } from "../../../api";
+import { getCustomers } from "../../../api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomerCard from "../Cards/CustomerCard";
 import { SearchBar } from "react-native-elements";
 import AddNewCustomerModal from "../Modal/AddNewCustomerModal";
+
+const BUTTON_HEIGHT = 56;
 
 const CustomerScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,31 +24,36 @@ const CustomerScreen: React.FC = () => {
   );
 
   const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false); 
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     dispatch(getCustomers() as any);
-    
   }, [dispatch]);
 
-  const filteredCustomers = customers?.filter((item) =>
-    item.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredCustomers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return customers ?? [];
+    return (customers ?? []).filter((item) =>
+      (item.name ?? "").toLowerCase().includes(q)
+    );
+  }, [customers, search]);
 
-  const renderItem = ({ item }: any) => (
-    <CustomerCard
-      customer={{
-        id: item.id,
-        name: item.name,
-        email: item.email,
-        phone: item.phone,
-        creator: item.creator,
-        created_at: item.created_at,
-        proposals: item.proposals,
-      }} onEdit={function (customer: any): void {
-        throw new Error("Function not implemented.");
-      } }    />
-  );
+  const renderItem = useCallback(({ item }: any) => {
+    return (
+      <CustomerCard
+        customer={{
+          id: item.id,
+          name: item.name,
+          email: item.contacts?.email ?? item.email,
+          phone: item.contacts?.phone ?? item.phone,
+          creator: item.creator,
+          created_at: item.created_at,
+          proposals: item.proposals ?? 0,
+        }}
+        onEdit={() => {}}
+      />
+    );
+  }, []);
 
   if (loading) {
     return (
@@ -59,20 +66,10 @@ const CustomerScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>{String(error)}</Text>
       </View>
     );
   }
-
-  if (!customers || customers.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.emptyText}>Henüz müşteri bilgisi bulunamadı.</Text>
-      </View>
-    );
-  }
-
-  
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
@@ -85,25 +82,28 @@ const CustomerScreen: React.FC = () => {
           round
           containerStyle={styles.searchContainer}
           inputContainerStyle={styles.searchInput}
-          inputStyle={{ fontSize: 14 , }}
+          inputStyle={styles.searchText}
         />
 
         <FlatList
           data={filteredCustomers}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
+          keyboardShouldPersistTaps="handled"
+          style={styles.list}
         />
 
-        <TouchableOpacity
-          onPress={() => setShowModal(true)}
-          style={styles.fixedButton}
-        >
-          <Text style={styles.buttonText}>+ Yeni Müşteri Oluştur</Text>
-        </TouchableOpacity>
+        <View style={styles.bottomArea}>
+          <TouchableOpacity
+            onPress={() => setShowModal(true)}
+            style={styles.fixedButton}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.buttonText}>Yeni Müşteri Oluştur</Text>
+          </TouchableOpacity>
+        </View>
 
-        
         <AddNewCustomerModal
           isVisible={showModal}
           onClose={() => setShowModal(false)}
@@ -116,16 +116,21 @@ const CustomerScreen: React.FC = () => {
 export default CustomerScreen;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   container: {
     flex: 1,
+    backgroundColor: "#fff",
     paddingHorizontal: 12,
   },
   searchContainer: {
     backgroundColor: "#fff",
     borderBottomColor: "transparent",
     borderTopColor: "transparent",
-    marginTop: 8,
+    paddingHorizontal: 0,
+    paddingVertical: 8,
   },
   searchInput: {
     backgroundColor: "#F6F6F6",
@@ -133,43 +138,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDD",
     height: 40,
-    marginTop: -20,
   },
-  listContainer: {
-    paddingBottom: 100,
+  searchText: {
+    fontSize: 14,
+  },
+  list: {
+    flex: 1,
+  },
+  bottomArea: {
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+  },
+  fixedButton: {
+    height: BUTTON_HEIGHT,
+    backgroundColor: "#2EC4D6",
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    maxHeight: 46,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#666",
+    backgroundColor: "#fff",
   },
   errorText: {
     fontSize: 16,
     color: "red",
-  },
-  fixedButton: {
-    position: "absolute",
-    bottom: 50,
-    left: 20,
-    right: 20,
-    backgroundColor: "#00A7C0",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 15,
   },
 });

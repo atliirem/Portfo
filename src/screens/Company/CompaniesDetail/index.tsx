@@ -8,6 +8,7 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  ScrollView,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RouteProp, useRoute } from "@react-navigation/native";
@@ -62,8 +63,6 @@ const PersonalCard: React.FC<PersonalCardProps> = ({ personal }) => {
       Linking.openURL(`tel:+${phone.code}${phone.number.replace(/\D/g, "")}`);
     }
   };
-
-  
 
   return (
     <View style={styles.card}>
@@ -124,7 +123,7 @@ const PersonalCard: React.FC<PersonalCardProps> = ({ personal }) => {
               <TouchableOpacity style={styles.contactBtn} onPress={handleEmail}>
                 <Ionicons name="mail" size={16} color="#fff" />
               </TouchableOpacity>
-            )}
+              )}
             {personal.contacts?.whatsapp && (
               <TouchableOpacity
                 style={[styles.contactBtn, styles.whatsappBtn]}
@@ -164,11 +163,10 @@ const CompanyDetailScreen = () => {
   }, [activeTab, id, dispatch]);
 
   useEffect(() => {
-  if (activeTab === "location" && id) {
-    dispatch(getCompanyLocations(id));
-  }
-}, [activeTab, id, dispatch]);
-
+    if (activeTab === "location" && id) {
+      dispatch(getCompanyLocations(id));
+    }
+  }, [activeTab, id, dispatch]);
 
   const TeamSection = () => {
     if (loadingTeam) {
@@ -231,38 +229,42 @@ const CompanyDetailScreen = () => {
 
   return (
     <View style={styles.page}>
-      <CompaniesCard
-        id={selectedCompany.id}
-        title={selectedCompany.name}
-        image={selectedCompany.logo}
-        type={selectedCompany.type}
-        city={selectedCompany.properties?.[0]?.city?.title}
-        onPress={() => {}}
-      />
 
-      <FlatList
-        horizontal
-        data={tabs}
-        keyExtractor={(item) => item.key}
-        renderItem={({ item }) => (
-          <ComponentButton
-            label={item.label}
-            isSelected={activeTab === item.key}
-            height={40}
-            width={110}
-            marginTop={7}
-            onPress={() => setActiveTab(item.key as TabKey)}
-          />
-        )}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.buttonContainer}
-      />
+      <View style={styles.headerSection}>
+        <CompaniesCard
+          id={selectedCompany.id}
+          title={selectedCompany.name}
+          image={selectedCompany.logo}
+          type={selectedCompany.type}
+          city={selectedCompany.properties?.[0]?.city?.title}
+          onPress={() => {}}
+        />
 
-      {activeTab === "myPortfoy" && <PropertiesScreenProfile companyId={id} />}
-      {activeTab === "team" && <TeamSection />}
-     {activeTab === "location" && (
-  <CompanyLoc address={selectedCompany?.locations?.[0]?.address} />
-)}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.buttonContainer}
+        >
+          {tabs.map((item) => (
+            <ComponentButton
+              key={item.key}
+              label={item.label}
+              isSelected={activeTab === item.key}
+              height={40}
+              width={110}
+              marginTop={7}
+              onPress={() => setActiveTab(item.key as TabKey)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+
+
+      <View style={styles.tabContent}>
+        {activeTab === "myPortfoy" && <PropertiesScreenProfile companyId={id} />}
+        {activeTab === "team" && <TeamSection />}
+        {activeTab === "location" && <CompanyLoc />}
+      </View>
     </View>
   );
 };
@@ -273,13 +275,18 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  headerSection: {
     paddingHorizontal: 10,
-  
-  
   },
   buttonContainer: {
     gap: 10,
     marginVertical: 10,
+    paddingHorizontal: 5,
+  },
+  tabContent: {
+    flex: 1,
+    paddingHorizontal: 10,
   },
   loadingContainer: {
     flex: 1,
@@ -292,7 +299,8 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
- 
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,

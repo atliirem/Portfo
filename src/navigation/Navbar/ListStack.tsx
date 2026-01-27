@@ -4,6 +4,8 @@ import Listing from "../../screens/Listing";
 import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
 import TopBar from "../TopBar"; 
 import {DetailAlerts} from "../../screens/Detail/DetailAlerts"
+import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
+import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
 
 
 
@@ -11,6 +13,8 @@ export type ListingStackParamList = {
   Listing: undefined;
   PropertiesDetailScreen: { id: number };
   DetailAlerts: undefined;
+  SelectedPropertiesScreen: undefined;
+  CompanyDetailScreen: {id: number}
 };
 
 const Stack = createNativeStackNavigator<ListingStackParamList>();
@@ -33,6 +37,21 @@ export default function ListingStack() {
           header: () => <TopBar />,
         }}
       /> 
+         <Stack.Screen
+        name="SelectedPropertiesScreen"
+        component={SelectedPropertiesScreen}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
+      
+          <Stack.Screen
+        name="CompanyDetailScreen"
+        component={CompanyDetailScreen}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
 
       <Stack.Screen
         name="PropertiesDetailScreen"

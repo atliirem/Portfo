@@ -1,108 +1,100 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { getCountries } from "../../../../api";
 import { updateProfile } from "../../../../api";
+import TextInputR from "../../../components/TextInput/TextInputR";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
-  // const { country, loading } = useSelector(
-  //   (state: RootState) => state.country
-  // );
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [code, setCode]= useState("");
- 
-
-  useEffect(() => {
-    dispatch(getCountries());
-  }, [dispatch]);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   useEffect(() => {
     if (user) {
       setName(user.name || "");
+      setPhoneCode(user.phone?.code || "");
+      setPhoneNumber(user.phone?.number || "");
       setEmail(user.email || "");
-       setPhone(user.phone.number || "");
-  
     }
   }, [user]);
 
   const handleSave = () => {
-    if (!name || !email  || !phone) {
-      Alert.alert("Hata", "Lütfen tüm alanları doldurun!");
+    if (!name.trim() || !phoneCode.trim() || !phoneNumber.trim()) {
+      Alert.alert("Hata", "Tüm alanları doldurun");
       return;
     }
 
-  
-
-    console.log("Gönderilen veri:", { name, email, });
-
-    dispatch(updateProfile({ name, email, phone}))
+    dispatch(
+      updateProfile({
+        name: name.trim(),
+        phone_code: phoneCode.replace(/\D/g, ""),
+        phone: phoneNumber.replace(/\D/g, ""),
+        locale: "tr",
+      })
+    )
       .unwrap()
       .then(() => {
-        Alert.alert("Başarılı", "Profiliniz güncellendi.");
+        Alert.alert("Başarılı", "Profil güncellendi");
         navigation.goBack();
       })
-      .catch((err: any) => {
-        Alert.alert("Hata", err || "Güncelleme başarısız.");
+      .catch((err) => {
+        Alert.alert("Hata", err || "Profil güncellenemedi");
       });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profilinizi Güncelleyin</Text>
+      <Text style={styles.title}>Profil Güncelle</Text>
 
-      <TextInput
+      <TextInputR
+        label="İsim ve Soyisim"
         value={name}
         onChangeText={setName}
         placeholder="Ad Soyad"
-        style={styles.textInput}
       />
-      <TextInput
+      <TextInputR
+      disabled
         value={email}
         onChangeText={setEmail}
-        placeholder="E-posta"
-        keyboardType="email-address"
-        style={styles.textInput}
+        placeholder="Email"
+      
       />
 
-<View style={{flexDirection: 'row'}}>
-       <TextInput
-        value={code}
-        onChangeText={setCode}
-        placeholder="Telefon codu"
-        keyboardType="email-address"
-        style={styles.textInputsmall}
-      />
+      <View style={styles.phoneRow}>
+        <TextInputR
+          label="Kod"
+          value={phoneCode}
+          onChangeText={setPhoneCode}
+          placeholder="90"
+          keyboardType="number-pad"
+          containerStyle={styles.codeInput}
+        />
 
-       <TextInput
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="E-posta"
-        keyboardType="email-address"
-        style={styles.textInput}
-      />
+        <TextInputR
+          label="Telefon"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          placeholder="Telefon"
+          keyboardType="phone-pad"
+          containerStyle={styles.phoneInput}
+        />
+      </View>
 
-
-    </View>
-
-      <TouchableOpacity onPress={handleSave} style={styles.saveBtn}>
-        <Text style={styles.saveText}>Kaydet</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Kaydediliyor..." : "Güncelle"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -111,34 +103,41 @@ const EditProfileScreen: React.FC = () => {
 export default EditProfileScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, top: "5%" },
-  title: { fontSize: 22, fontWeight: "600", color: "black", marginBottom: 16 },
-  textInput: {
-    borderWidth: 0.5,
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 12,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
   },
-  textInputsmall:{
-     borderWidth: 0.5,
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 12,
+  title: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 20,
+    color: "#19A7B6",
   },
-  phoneRow: { flexDirection: "row", alignItems: "center" },
-  pickerContainer: {
-    width: "45%",
-    borderWidth: 0.5,
-    borderRadius: 6,
-    marginRight: 10,
+  phoneRow: {
+    flexDirection: "row",
+    gap: 12,
   },
-  phoneInput: { flex: 1 },
-  saveBtn: {
-    backgroundColor: "#1a8b95",
-    padding: 14,
+  codeInput: {
+    width: 90,
+  },
+  phoneInput: {
+    flex: 1,
+  },
+  button: {
+    marginTop: 24,
+    backgroundColor: "#19A7B6",
+    paddingVertical: 14,
     borderRadius: 6,
     alignItems: "center",
-    marginTop: 16,
   },
-  saveText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+ 
 });

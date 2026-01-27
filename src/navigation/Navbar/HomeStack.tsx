@@ -3,10 +3,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 
 import HomeScreen from "../../screens/HomeScreen";
- import {CustomerOffers} from "../../screens/Detail/CustomerOffers";
+import {CustomerOffers} from "../../screens/Detail/CustomerOffers";
 
 import {DetailAlerts} from "../../screens/Detail/DetailAlerts";
-
  import Offers from "../../screens/Offers";
  import Contact from "../../screens/Contact";
 import PropertiesScreen from "../../screens/Detail/DetailProperties";
@@ -14,7 +13,7 @@ import NewsDetailScreen from "../../screens/Detail/NewsDetailScreen";
  import NewsListScreen from "../../screens/Detail/DetailNews";
  import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
  import GalleryScreen from "../../screens/GalleryScreen"
- import MyPropertiesDetailScreen from "../../screens/Detail/MyPropertiesDetailScreen"
+
 
 
 import TopBar from "../TopBar";
@@ -22,6 +21,7 @@ import Top from "../Top";
 import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
 import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
 import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
+import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
 
 export interface GalleryImage {
   id: number;
@@ -48,11 +48,14 @@ export type HomeStackParamList = {
   images: GalleryImage[]; 
   startIndex: number;
   MyPropertiesDetailScreen: {id: number};
+  EditTaslak: undefined;
 
-  FullScreenGallery: {
+FullScreenGallery: {
     images: { uri: string }[];
     startIndex: number;
   };
+     Second: undefined;
+  Taslak: { propertyId: number };
 
   CompanyDetailScreen: {id: number}
   SelectedPropertiesScreen: undefined;
@@ -74,6 +77,13 @@ export default function HomeStack() {
           header: () => <TopBar />,
         }}
       />
+       <Stack.Screen
+        name="EditTaslak"
+        component={EditTaslak}
+        options={{
+          header: () => <TopBar />,
+        }}
+      />
       <Stack.Screen
         name="CustomerOffers"
         component={CustomerOffers}
@@ -81,6 +91,14 @@ export default function HomeStack() {
           header: () => <Top />,
         }}
       />
+      <Stack.Screen 
+  name="FullScreenGallery" 
+  component={FullScreenGallery}
+  options={{ 
+    headerShown: false,
+    presentation: 'fullScreenModal' 
+  }}
+/>
 
       <Stack.Screen
         name="PropertiesDetailScreen"
@@ -95,13 +113,13 @@ export default function HomeStack() {
   options={{ title: "Seçilen İlanlar" }}
 />
 
-      <Stack.Screen
+      {/* <Stack.Screen
         name="MyPropertiesDetailScreen"
         component={MyPropertiesDetailScreen}
      
           options={{ headerShown: false }}
       />
-      
+       */}
       
        <Stack.Screen
         name="GalleryScreen"
@@ -170,15 +188,7 @@ export default function HomeStack() {
         }}
       /> 
 
-      <Stack.Screen
-  name="FullScreenGallery"
-  component={FullScreenGallery}
-  options={{
-    headerShown: false,
-    animation: "fade",
-    presentation: "fullScreenModal",
-  }}
-/>
+ 
     </Stack.Navigator>
   );
 }

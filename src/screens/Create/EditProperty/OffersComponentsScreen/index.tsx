@@ -55,7 +55,7 @@ export default function OffersComponentsScreen( ) {
 
       <View style={styles.content}>
         {activeTab === 'Müşteriye Gelen' && <EditProperty />}
-        {activeTab === 'Müşterilden giden' &&  <PropertyMap/>}
+        {activeTab === 'Müşterilden giden' &&  <PropertyMap location={undefined}/>}
         {activeTab === 'diğer firmaların oluşturduğu teklifler' && <SettingsScreen propertyId={0} />}
 
         {/* {activeTab === 'Gallery' && < />} */}

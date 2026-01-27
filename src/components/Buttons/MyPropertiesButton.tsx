@@ -1,37 +1,44 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { useWishlistToggle } from "../FavoriteToggle";
 import AddPriceOffers from "../Modal/AddPriceOffers";
 
 const MyPropertiesButton = ({ item }: { item: any }) => {
-  const toggleFavorite = useWishlistToggle(item);
   const navigation = useNavigation();
-  const [showModal, setShowModal] = useState(false); 
+  const [showModal, setShowModal] = useState(false);
+
+  const handleFavoritePress = () => {
+    Alert.alert(
+      "Uyarı",
+      "Kendi ilanınızı favorilere ekleyemezsiniz.",
+      [{ text: "Tamam", style: "default" }]
+    );
+  };
 
   const handleEdit = () => {
- 
-    console.log(" İlanı Düzenle tıklandı");
-    console.log(" item:", item);
-    console.log(" item.id:", item?.id);
-    
     if (!item?.id) {
       console.error("item.id bulunamadı!");
       return;
     }
-    
-    navigation.navigate('EditTaslak' as never, { propertyId: item.id } as never);
+
+    navigation.navigate("EditTaslak" as never, { propertyId: item.id } as never);
   };
 
   return (
     <View>
-      <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={() => navigation.goBack()}
+      >
         <Ionicons name="chevron-back-outline" size={25} color="#1a8b95" />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.iconContainerheart} onPress={toggleFavorite}>
-        <Ionicons name="heart-outline" size={25} color="#1a8b95" />
+      <TouchableOpacity
+        style={styles.iconContainerheart}
+        onPress={handleFavoritePress}
+      >
+        <Ionicons name="heart-outline" size={25} color="#999" />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleEdit} style={styles.iconContainerPrice}>

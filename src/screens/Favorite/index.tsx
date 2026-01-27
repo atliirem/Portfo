@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,28 +7,29 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getWishlist } from "../../../api";
-import FavoriteCard from "../../components/Cards/FavoriteCard";
+import { getWishlist, toggleWishlist } from "../../../api";
 import { useFocusEffect } from "@react-navigation/native";
 import FirstCard from "../../components/Cards/FirstCard";
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/RootStack";
 import Ionicons from "@react-native-vector-icons/ionicons";
 
 type NavigationProps = NativeStackNavigationProp<RootStackParamList>;
 
 const Favorite: React.FC = () => {
-    const navigation = useNavigation<NavigationProps>();
+  const navigation = useNavigation<NavigationProps>();
   const dispatch = useDispatch<AppDispatch>();
-  const { favlist, loading, errorDiscount } = useSelector(
+  const { favlist, loading } = useSelector(
     (state: RootState) => state.properties
   );
 
+  const [clearLoading, setClearLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -36,12 +37,49 @@ const Favorite: React.FC = () => {
     }, [dispatch])
   );
 
-
   const handleRefresh = () => {
     dispatch(getWishlist() as never);
   };
 
-  if (loading) {
+  const handleClearWishlist = () => {
+    if (!favlist || favlist.length === 0) {
+      Alert.alert("Uyarı", "Favori listeniz zaten boş.");
+      return;
+    }
+
+    Alert.alert(
+      "Favorileri Temizle",
+      `${favlist.length} favoriyi silmek istediğinize emin misiniz?`,
+      [
+        { text: "İptal", style: "cancel" },
+        {
+          text: "Temizle",
+          style: "destructive",
+          onPress: async () => {
+            setClearLoading(true);
+            try {
+             
+              for (const item of favlist) {
+                await dispatch(toggleWishlist(item.id)).unwrap();
+              }
+              
+       
+              await dispatch(getWishlist());
+              Alert.alert("Başarılı", "Tüm favoriler temizlendi.");
+            } catch (error: any) {
+              Alert.alert("Hata", "Favoriler temizlenirken bir hata oluştu.");
+      
+              dispatch(getWishlist());
+            } finally {
+              setClearLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading && !clearLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#00A7C0" />
@@ -49,23 +87,23 @@ const Favorite: React.FC = () => {
     );
   }
 
-  if (errorDiscount) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>{errorDiscount}</Text>
-      </View>
-    );
-  }
-
   if (!favlist || favlist.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.emptyText}>Henüz favori ilan yok</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+        <View style={styles.container}>
+          <View style={styles.headerRow}>
+            <Text style={styles.header}>Favorilerim</Text>
+          </View>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="heart-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>Henüz favori ilan yok</Text>
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
-     const renderCard = ({ item }) => (
+  const renderCard = ({ item }: { item: any }) => (
     <FirstCard
       title={item.title}
       image={item.cover}
@@ -75,19 +113,28 @@ const Favorite: React.FC = () => {
       type={item.type?.title}
       city={item.city?.title}
       district={item.district?.title}
-      onPress={() => navigation.navigate('PropertiesDetailScreen', { id: item.id })}
+      onPress={() =>
+        navigation.navigate("PropertiesDetailScreen", { id: item.id })
+      }
     />
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <View style={styles.container}>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between', }}>
-        <Text style={styles.header}>Favorilerim</Text>
-        <TouchableOpacity >
-        <Text style={styles.clean}>Temizle</Text>
-        </TouchableOpacity>
-       </View>
+        <View style={styles.headerRow}>
+          <Text style={styles.header}>Favorilerim</Text>
+          <TouchableOpacity
+            onPress={handleClearWishlist}
+            disabled={clearLoading}
+          >
+            {clearLoading ? (
+              <ActivityIndicator size="small" color="#00A7C0" />
+            ) : (
+              <Text style={styles.clean}>Temizle</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <FlatList
           data={favlist}
@@ -120,24 +167,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginTop: -10,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   header: {
     fontSize: 20,
     fontWeight: "700",
     color: "#00A7C0",
     marginVertical: 12,
-    
   },
-   clean: {
+  clean: {
     fontSize: 12,
     fontWeight: "600",
     color: "#00A7C0",
     marginVertical: 12,
-    justifyContent: 'center',
-    alignSelf: 'center',
-    alignItems: 'center',
     marginRight: 12,
-    textDecorationLine: 'underline'
-    
+    textDecorationLine: "underline",
   },
   listContainer: {
     paddingBottom: 30,
@@ -146,6 +193,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
   },
   emptyText: {
     fontSize: 16,

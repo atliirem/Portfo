@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { launchImageLibrary } from "react-native-image-picker";
 import { useDispatch, useSelector } from "react-redux";
-import { addLocalImage } from "../../redux/Slice/uploadPhotoSlice"
+
 
 interface Props {
   category: string; 
@@ -100,3 +100,11 @@ const styles = StyleSheet.create({
     color: "gray",
   },
 });
+function addLocalImage(arg0: { category: string; uri: any; }): any {
+  throw new Error("Function not implemented.");
+}
+
+
+
+// buradaki durum da şu şimdi eğer ilana fotoğraf yüklenmediyse default image var o gözüküyor. ama kapak fotoğrafı olarak 1 foto konduğu için sonra fotoğraf düzenlemeye çalıştığımda kapak fotoğraftan default image silinmiyor. bu sebeple 
+// o yüzden kapak fotoğrafa basınca güncelle  ve görüntüle seçenekleri olan bir modal Koy. kapak fotoğrafı ilk başta olsun o en büyük olsun tek foto yüklenecek şekilde altında feature'lara göre gelen anlardakini çarpı işareti ile silebiliriz. 

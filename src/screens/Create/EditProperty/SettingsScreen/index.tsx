@@ -1,8 +1,7 @@
 import React from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, ScrollView } from "react-native";
 import { Button, Text } from "react-native-elements";
 import { useNavigation } from "@react-navigation/native";
-
 import {
   getDeleteProperty,
   getCloneProperty,
@@ -19,7 +18,7 @@ interface Props {
 
 const PropertyActions: React.FC<Props> = ({ propertyId }) => {
   const dispatch = useAppDispatch();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   const { loading, property } = useAppSelector((state) => state.properties);
 
@@ -27,10 +26,7 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
   const isPublished = currentStatus === "published" || currentStatus === "active";
 
   const handleDeactivate = () => {
-    if (!propertyId || propertyId === 0) {
-      Alert.alert("Hata", "İlan ID bulunamadı.");
-      return;
-    }
+    if (!propertyId) return Alert.alert("Hata", "İlan ID bulunamadı.");
 
     Alert.alert(
       "İlanı Pasife Al",
@@ -43,7 +39,6 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
           onPress: async () => {
             try {
               await dispatch(updatePropertyStatus({ id: propertyId, status: "draft" })).unwrap();
-
               Alert.alert("Başarılı", "İlan pasife alındı.", [
                 { text: "Tamam", onPress: () => dispatch(getMyProperties(1)) },
               ]);
@@ -56,52 +51,39 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
     );
   };
 
-
   const handleDelete = () => {
-    if (!propertyId || propertyId === 0) {
-      Alert.alert("Hata", "İlan ID bulunamadı.");
-      return;
-    }
+    if (!propertyId) return Alert.alert("Hata", "İlan ID bulunamadı.");
 
-    Alert.alert(
-      "Emin misiniz?",
-      "Bu ilan kalıcı olarak silinecek.",
-      [
-        { text: "İptal", style: "cancel" },
-        {
-          text: "Sil",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await dispatch(getDeleteProperty(propertyId)).unwrap();
-
-              Alert.alert("Başarılı", "İlan silindi.", [
-                {
-                  text: "Tamam",
-                  onPress: () => {
-                    dispatch(getMyProperties(1));
-                    navigation.goBack();
-                  },
+    Alert.alert("Emin misiniz?", "Bu ilan kalıcı olarak silinecek.", [
+      { text: "İptal", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await dispatch(getDeleteProperty(propertyId)).unwrap();
+            Alert.alert("Başarılı", "İlan silindi.", [
+              {
+                text: "Tamam",
+                onPress: () => {
+                  dispatch(getMyProperties(1));
+                  navigation.goBack();
                 },
-              ]);
-            } catch (error: any) {
-              Alert.alert("Hata", error || "İlan silinemedi.");
-            }
-          },
+              },
+            ]);
+          } catch (error: any) {
+            Alert.alert("Hata", error || "İlan silinemedi.");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleClone = async () => {
-    if (!propertyId || propertyId === 0) {
-      Alert.alert("Hata", "İlan ID bulunamadı.");
-      return;
-    }
+    if (!propertyId) return Alert.alert("Hata", "İlan ID bulunamadı.");
 
     try {
       const currentTitle = property?.title || "İlan";
-
       await dispatch(
         getCloneProperty({
           id: propertyId,
@@ -110,22 +92,15 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
       ).unwrap();
 
       Alert.alert("Başarılı", "İlan kopyalandı.", [
-        {
-          text: "Tamam",
-          onPress: () => dispatch(getMyProperties(1)),
-        },
+        { text: "Tamam", onPress: () => dispatch(getMyProperties(1)) },
       ]);
     } catch (error: any) {
       Alert.alert("Hata", error || "İlan kopyalanamadı.");
     }
   };
 
-
   const handleSoldUpdate = () => {
-    if (!propertyId || propertyId === 0) {
-      Alert.alert("Hata", "İlan ID bulunamadı.");
-      return;
-    }
+    if (!propertyId) return Alert.alert("Hata", "İlan ID bulunamadı.");
 
     Alert.alert(
       "İlanı Satıldı Olarak İşaretle",
@@ -137,7 +112,6 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
           onPress: async () => {
             try {
               await dispatch(getUpdateSold({ id: propertyId, hold: true })).unwrap();
-
               Alert.alert("Başarılı", "İlan satıldı olarak işaretlendi.", [
                 { text: "Tamam", onPress: () => dispatch(getMyProperties(1)) },
               ]);
@@ -152,7 +126,6 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
           onPress: async () => {
             try {
               await dispatch(getUpdateSold({ id: propertyId, hold: false })).unwrap();
-
               Alert.alert("Başarılı", "İlan satıldı ve portföyden kaldırıldı.", [
                 {
                   text: "Tamam",
@@ -172,68 +145,75 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
   };
 
   return (
-    <SafeAreaView  edges={['bottom']}>
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          {isPublished && (
+            <View style={styles.section}>
+              <Text style={styles.header}>İlanı Pasife Al</Text>
+              <Text style={styles.info}>
+                İlanınızı yayından kaldırın. Daha sonra tekrar yayınlayabilirsiniz.
+              </Text>
+              <Button
+                title="Pasife Al"
+                loading={loading}
+                buttonStyle={[styles.buttonBase, styles.deactivate]}
+                onPress={handleDeactivate}
+                titleStyle={styles.titleStyle}
+                disabled={!propertyId}
+              />
+            </View>
+          )}
 
-      {isPublished && (
-        <>
-          <Text style={styles.header}>İlanı Pasife Al</Text>
-          <Text style={styles.info}>
-            İlanınızı yayından kaldırın. Daha sonra tekrar yayınlayabilirsiniz.
-          </Text>
-          <Button
-            title="Pasife Al"
-            loading={loading}
-            buttonStyle={styles.deactivate}
-            onPress={handleDeactivate}
-            titleStyle={styles.titleStyle}
-            disabled={!propertyId}
-          />
-        </>
-      )}
+          <View style={styles.section}>
+            <Text style={styles.header}>İlanı Kopyala</Text>
+            <Text style={styles.info}>
+              Bu ilanın galeri görselleri dahil tüm özelliklerini kullanarak yeni bir ilan oluşturabilirsiniz.
+            </Text>
+            <Button
+              title="Kopyala"
+              loading={loading}
+              buttonStyle={[styles.buttonBase, styles.clone]}
+              onPress={handleClone}
+              titleStyle={styles.titleStyle}
+              disabled={!propertyId}
+            />
+          </View>
 
+          <View style={styles.section}>
+            <Text style={styles.header}>İlanı Kaldır</Text>
+            <Text style={styles.info}>
+              Bu ilana ait hareketleri, teklifleri ve benzeri tüm kayıtları tamamen kaldırın.
+            </Text>
+            <Button
+              title="Kaldır"
+              loading={loading}
+              buttonStyle={[styles.buttonBase, styles.delete]}
+              onPress={handleDelete}
+              titleStyle={styles.titleStyle}
+              disabled={!propertyId}
+            />
+          </View>
 
-      <Text style={styles.header}>İlanı Kopyala</Text>
-      <Text style={styles.info}>
-        Bu ilanın galeri görselleri dahil tüm özelliklerini kullanarak yeni bir ilan oluşturabilirsiniz.
-      </Text>
-      <Button
-        title="Kopyala"
-        loading={loading}
-        buttonStyle={styles.clone}
-        onPress={handleClone}
-        titleStyle={styles.titleStyle}
-        disabled={!propertyId}
-      />
-
-      {/* Sil */}
-      <Text style={styles.header}>İlanı Kaldır</Text>
-      <Text style={styles.info}>
-        Bu ilana ait hareketleri, teklifleri ve benzeri tüm kayıtları tamamen kaldırın.
-      </Text>
-      <Button
-        title="Kaldır"
-        loading={loading}
-        buttonStyle={styles.delete}
-        onPress={handleDelete}
-        titleStyle={styles.titleStyle}
-        disabled={!propertyId}
-      />
-
-      {/* Satıldı */}
-      <Text style={styles.header}>İlan Satıldı</Text>
-      <Text style={styles.info}>
-        İlanı satıldı olarak işaretleyin ve tercihinize göre portföyünüzde kalmasını sağlayın.
-      </Text>
-      <Button
-        title="İlan Satıldı"
-        loading={loading}
-        buttonStyle={styles.sold}
-        onPress={handleSoldUpdate}
-        titleStyle={styles.titleStyle}
-        disabled={!propertyId}
-      />
-    </View>
+          <View style={styles.section}>
+            <Text style={styles.header}>İlan Satıldı</Text>
+            <Text style={styles.info}>
+              İlanı satıldı olarak işaretleyin ve tercihinize göre portföyünüzde kalmasını sağlayın.
+            </Text>
+            <Button
+              title="İlan Satıldı"
+              loading={loading}
+              buttonStyle={[styles.buttonBase, styles.sold]}
+              onPress={handleSoldUpdate}
+              titleStyle={styles.titleStyle}
+              disabled={!propertyId}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -241,44 +221,55 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
 export default PropertyActions;
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 25,
+  safe: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingBottom: 46,
+  },
+  scrollContent: {
     padding: 16,
-    gap: 12,
+    paddingBottom: 24,
   },
-  deactivate: {
-    backgroundColor: "#6c757d",
-    borderRadius: 8,
-    width: "50%",
+
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
   },
-  delete: {
-    backgroundColor: "#dc3545",
-    borderRadius: 8,
-    width: "50%",
+
+  section: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f2f2f2",
+  },
+
+  header: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#25C5D1",
+    marginBottom: 6,
+  },
+  info: {
+    color: "#9a9a9a",
+    fontWeight: "600",
+    marginBottom: 10,
+    lineHeight: 18,
+  },
+
+  buttonBase: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    alignSelf: "flex-start",
+    minWidth: 160,
   },
   titleStyle: {
     fontWeight: "700",
     fontSize: 16,
   },
-  clone: {
-    backgroundColor: "#29c5d3",
-    borderRadius: 8,
-    width: "50%",
-  },
-  sold: {
-    backgroundColor: "#1a8755",
-    borderRadius: 8,
-    width: "52%",
-  },
-  header: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#25C5D1",
-    marginTop: 10,
-  },
-  info: {
-    color: "#c0c0c0",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
+
+  deactivate: { backgroundColor: "#6c757d" },
+  delete: { backgroundColor: "#dc3545" },
+  clone: { backgroundColor: "#29c5d3" },
+  sold: { backgroundColor: "#1a8755" },
 });

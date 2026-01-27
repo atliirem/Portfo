@@ -1,114 +1,112 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Text } from 'react-native'; 
-import { ComponentButton } from '../../components/Buttons/componentsButton';
+import { View, StyleSheet, Text } from 'react-native'; 
 import PropertyMap from '../../components/MapComponents'; 
 import Video from "react-native-video"; 
+import { ComponentButtonOffers } from '../../components/Buttons/componentsButtonOffers';
 
 interface MapOrVideosProps {
   locationData: {
     latitude: string;
     longitude: string;
   } | null | undefined;
-  videoUrl?: string | null;  
+  videoUrl?: string | null;
+  editable?: boolean; 
+  onLocationChange?: (lat: number, lng: number) => void;
 }
 
-export default function MapOrVideos({ locationData, videoUrl }: MapOrVideosProps) {
+export default function MapOrVideos({ 
+  locationData, 
+  videoUrl, 
+  editable = false,  
+  onLocationChange   
+}: MapOrVideosProps) {
   const [activeTab, setActiveTab] = useState('Map');
 
-  const tabs = [
-    { key: 'Map', label: 'Harita' },
-    { key: 'Videos', label: 'Video' },
-  ];
-
-  const renderButton = ({ item }: any) => (
-    <ComponentButton
-      label={item.label}
-      isSelected={activeTab === item.key}
-      height={40}
-      width={155}
-      marginTop={4}
-      onPress={() => setActiveTab(item.key)}
-    />
-  );
+  // Kontrolü kaldırdık - butonlar her zaman görünecek
 
   return (
-    <View style={styles.page}>
-     
-      <View style={{ height: 60 }}>
-        <FlatList
-          horizontal
-          data={tabs}
-          renderItem={renderButton}
-          keyExtractor={(item) => item.key}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.buttonContainer}
+    <View style={styles.container}>
+      <View style={styles.buttonRow}>
+        <ComponentButtonOffers
+          label="Harita Konumu"
+          isSelected={activeTab === 'Map'}
+          height={40}
+          width={155}
+          onPress={() => setActiveTab('Map')}
+        />
+        <ComponentButtonOffers
+          label={`Videolar (${videoUrl ? 1 : 0})`}
+          isSelected={activeTab === 'Videos'}
+          height={40}
+          width={155}
+          onPress={() => setActiveTab('Videos')}
         />
       </View>
 
       <View style={styles.content}>
         {activeTab === 'Map' && (
-             <PropertyMap location={locationData} />
+          <PropertyMap 
+            location={locationData} 
+            editable={editable}
+            onLocationChange={onLocationChange}
+          />
         )}
 
-       
         {activeTab === 'Videos' && (
-            videoUrl ? (
-                <View style={styles.videoContainer}>
-                    <Video
-                        source={{ uri: videoUrl }}
-                        style={styles.video}
-                        controls={true}         
-                        resizeMode="contain"  
-                        paused={false}        
-                    />
-                </View>
-            ) : (
-                <View style={styles.videoPlaceholder}>
-                    <Text style={{color: '#C4C4C4'}}>Bu ilan için video bulunmuyor.</Text>
-                </View>
-            )
+          videoUrl ? (
+            <View style={styles.videoContainer}>
+              <Video
+                source={{ uri: videoUrl }}
+                style={styles.video}
+                controls={true}         
+                resizeMode="contain"  
+                paused={false}        
+              />
+            </View>
+          ) : (
+            <View style={styles.videoPlaceholder}>
+              <Text style={styles.placeholderText}>Bu ilan için video bulunmuyor.</Text>
+            </View>
+          )
         )}
       </View>
     </View>
   );
 }
 
-
-
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
+  container: {
     backgroundColor: '#fff',
-    marginTop: 20, 
+    marginTop: 10,
   },
-  buttonContainer: {
-    paddingHorizontal: 20,
+  buttonRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
     gap: 10,
   },
   content: {
-    paddingHorizontal: 16, 
-    minHeight: 10,
+    // Parent zaten padding veriyor
   },
- 
   videoContainer: {
     width: '100%',
     height: 200,
-    backgroundColor: '#000000ff',
+    backgroundColor: '#000',
     borderRadius: 12,
     overflow: 'hidden',
-    marginTop: 10
   },
   video: {
     width: '100%',
     height: '100%',
   },
-
   videoPlaceholder: {
-    height: 20,
-    backgroundColor: '#fffcfcff',
+    height: 60,
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 12,
-    marginTop: 10
-  }
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 14,
+  },
 });

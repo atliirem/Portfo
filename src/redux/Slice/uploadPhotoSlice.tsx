@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "../../../api/CreateThunk";
 
-// ==================== INTERFACES ====================
-
 export interface GalleryImage {
   id: number;
   path: {
@@ -19,25 +17,24 @@ export interface GalleryCategory {
 
 interface GalleryState {
   categories: GalleryCategory[];
+  coverImage: string | null;
   loading: boolean;
   uploading: boolean;
+  uploadingCover: boolean;
   deleting: boolean;
   error: string | null;
 }
 
-// ==================== INITIAL STATE ====================
-
 const initialState: GalleryState = {
   categories: [],
+  coverImage: null,
   loading: false,
   uploading: false,
+  uploadingCover: false,
   deleting: false,
   error: null,
 };
 
-// ==================== ASYNC THUNKS ====================
-
-// Galeri yükle
 export const uploadGalleryImage = createAsyncThunk(
   "gallery/upload",
   async (
@@ -83,6 +80,48 @@ export const uploadGalleryImage = createAsyncThunk(
   }
 );
 
+export const uploadCoverImage = createAsyncThunk(
+  "gallery/uploadCover",
+  async (
+    { propertyId, asset }: { propertyId: number; asset: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+
+      const fileName = asset.fileName || asset.uri?.split("/").pop() || "cover.jpg";
+      const fileType = asset.type || "image/jpeg";
+
+      formData.append("cover", {
+        uri: asset.uri,
+        name: fileName,
+        type: fileType,
+      } as any);
+
+      console.log("📤 Cover Upload - Property:", propertyId);
+
+      const res = await api.post(
+        `/properties/${propertyId}/galleries/cover/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      console.log("Cover Upload response:", res.data);
+
+      if (res.data.status === "success") {
+        return {
+          path: res.data.data.path,
+        };
+      }
+
+      return rejectWithValue(res.data.message || "Kapak fotoğrafı yüklenemedi");
+    } catch (error: any) {
+      console.error("📤 Cover Upload error:", error?.response?.data);
+      return rejectWithValue(error?.response?.data?.message || "Kapak fotoğrafı yüklenemedi");
+    }
+  }
+);
+
 // Galeri sil
 export const deleteGalleryImage = createAsyncThunk(
   "gallery/delete",
@@ -111,30 +150,30 @@ export const deleteGalleryImage = createAsyncThunk(
   }
 );
 
-// ==================== SLICE ====================
-
 const gallerySlice = createSlice({
   name: "gallery",
   initialState,
   reducers: {
-    // Kategorileri set et (property'den)
     setGalleryCategories: (state, action: PayloadAction<GalleryCategory[]>) => {
       state.categories = action.payload;
     },
 
-    // Kategorileri temizle
+    setCoverImage: (state, action: PayloadAction<string | null>) => {
+      state.coverImage = action.payload;
+    },
+
     clearGallery: (state) => {
       state.categories = [];
+      state.coverImage = null;
       state.error = null;
     },
 
-    // Hata temizle
     clearGalleryError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-    // UPLOAD
+    // Upload
     builder
       .addCase(uploadGalleryImage.pending, (state) => {
         state.uploading = true;
@@ -145,7 +184,6 @@ const gallerySlice = createSlice({
 
         const { categoryId, image } = action.payload;
 
-        // Kategoriye yeni resmi ekle
         const category = state.categories.find((c) => c.id === categoryId);
         if (category && image) {
           const newImage: GalleryImage = {
@@ -163,7 +201,22 @@ const gallerySlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // DELETE
+    // Cover Upload
+    builder
+      .addCase(uploadCoverImage.pending, (state) => {
+        state.uploadingCover = true;
+        state.error = null;
+      })
+      .addCase(uploadCoverImage.fulfilled, (state, action) => {
+        state.uploadingCover = false;
+        state.coverImage = action.payload.path;
+      })
+      .addCase(uploadCoverImage.rejected, (state, action) => {
+        state.uploadingCover = false;
+        state.error = action.payload as string;
+      });
+
+    // Delete
     builder
       .addCase(deleteGalleryImage.pending, (state) => {
         state.deleting = true;
@@ -174,7 +227,6 @@ const gallerySlice = createSlice({
 
         const { imageId } = action.payload;
 
-        // Tüm kategorilerden resmi kaldır
         state.categories.forEach((category) => {
           category.images = category.images.filter((img) => img.id !== imageId);
         });
@@ -186,8 +238,6 @@ const gallerySlice = createSlice({
   },
 });
 
-// ==================== EXPORTS ====================
-
-export const { setGalleryCategories, clearGallery, clearGalleryError } = gallerySlice.actions;
+export const { setGalleryCategories, setCoverImage, clearGallery, clearGalleryError } = gallerySlice.actions;
 
 export default gallerySlice.reducer;

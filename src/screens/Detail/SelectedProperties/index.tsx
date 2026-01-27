@@ -25,6 +25,7 @@ import {
 import { AppDispatch } from "../../../redux/store";
 import { createProposal } from "../../../../api";
 import { ProfileButton } from "../../../components/Buttons/profileButton";
+import SelectCustomerModal from "../../SelectCustomerModal";
 
 const DEFAULT_IMAGE = "https://via.placeholder.com/100x100?text=No+Image";
 
@@ -35,6 +36,7 @@ const SelectedPropertiesScreen = () => {
   const [customer, setCustomer] = useState<any>(null);
   const [currency, setCurrency] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -42,11 +44,54 @@ const SelectedPropertiesScreen = () => {
   const [notes, setNotes] = useState("");
   const [notify, setNotify] = useState(false);
 
+   const [customerModalVisible, setCustomerModalVisible] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+    const [propertyCount, setPropertyCount] = useState(0);
+
+
+const changeCustomerAlert = (onConfirm: () => void) => {
+  Alert.alert(
+    'Müşteri Değiştirilecek',
+    'Müşteriyi değiştirdiğinizde tüm seçilen ilanlar silinecektir. Devam etmek istiyor musunuz?',
+    [
+      {
+        text: 'Vazgeç',
+        style: 'cancel',
+      },
+      {
+        text: 'Devam Et',
+        onPress: onConfirm,
+      },
+    ]
+  );
+};
+
+
+
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [])
   );
+
+    useFocusEffect(
+      useCallback(() => {
+        const checkData = async () => {
+          const customer = await getCustomer();
+          const properties = await getProperties();
+          setSelectedCustomer(customer);
+          setPropertyCount(properties.length);
+        };
+        checkData();
+      }, [])
+    );
+  
+    const handleCustomerSelect = (code: string, name: string) => {
+      console.log("Seçilen müşteri kodu:", code);
+      console.log("Seçilen müşteri adı:", name);
+    };
+
+  
 
   const loadData = async () => {
     setLoading(true);
@@ -137,7 +182,7 @@ const SelectedPropertiesScreen = () => {
       Alert.alert("Hata", result.payload as string);
     }
   } catch (error) {
-    console.log("❌ Error:", error);
+    console.log(" Error:", error);
     Alert.alert("Hata", "Teklif gönderilemedi");
   } finally {
     setSending(false);
@@ -179,16 +224,17 @@ const SelectedPropertiesScreen = () => {
           style={styles.actionButton}
           onPress={() => handleGoToProperty(item.id)}
         >
-          <Ionicons name="open-outline" size={18} color="#666" />
+          <Ionicons name="open-outline" size={16} color="#666" />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
           onPress={() => handleRemove(item.id)}
         >
-          <Ionicons name="trash-outline" size={18} color="#fff" />
+          <Ionicons name="trash-outline" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
+   
   );
 
   return (
@@ -200,12 +246,26 @@ const SelectedPropertiesScreen = () => {
           <Text style={styles.customerName}>{customer?.name || "Seçilmedi"}</Text>
         </View>
         <View>
-          <Text style={styles.customerLabel}>Para Birimi:</Text>
-          <Text style={styles.customerName}>{currency?.title || "Seçilmedi"}</Text>
+          <ProfileButton
+          bg="#c4c4c4"
+          height={45}
+          width={125}
+          color="white"
+  label="Müşteriyi değiştir"
+  onPress={() =>
+    changeCustomerAlert(() => {
+      setCustomer(null);
+      setProperties([]);
+      clearAllOfferData();
+      navigation.goBack();
+    })
+  }
+/>
+
         </View>
       </View>
 
-      {/* İlan Listesi Başlık */}
+     
       <Text style={styles.sectionTitle}>Teklif için seçtiğiniz ilanlar</Text>
        <View style={styles.bottomButtons}>
         <TouchableOpacity
@@ -219,7 +279,7 @@ const SelectedPropertiesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* İlan Listesi */}
+
       {properties.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="home-outline" size={60} color="#ccc" />
@@ -255,8 +315,8 @@ const SelectedPropertiesScreen = () => {
             <Text style={styles.summaryValue}>{customer?.name}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Para Birimi:</Text>
-            <Text style={styles.summaryValue}>{currency?.title || "TRY"}</Text>
+           <ProfileButton  
+           bg="#c4c4c4" height={23} label={"Müşteriyi değiştir"} marginTop={0} /> 
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>İlan Sayısı:</Text>
@@ -303,7 +363,15 @@ const SelectedPropertiesScreen = () => {
           />
         </View>
       </Modal>
+
+        <SelectCustomerModal
+        visible={customerModalVisible}
+        onClose={() => setCustomerModalVisible(false)}
+        onSelect={handleCustomerSelect}
+      />
     </View>
+
+    
   );
 };
 
@@ -402,10 +470,11 @@ const styles = StyleSheet.create({
   actionButtons: {
     justifyContent: "flex-start",
     gap: 8,
+    flexDirection: 'row'
   },
   actionButton: {
-    width: 36,
-    height: 36,
+    width: 28,
+    height: 28,
     borderRadius: 8,
     backgroundColor: "#f0f0f0",
     justifyContent: "center",
