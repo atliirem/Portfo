@@ -1,17 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
   TouchableOpacity,
-  
-
+  ScrollView,
+  Keyboard,
+  Platform,
+  KeyboardEvent,
 } from "react-native";
 import Modal from "react-native-modal";
-
-
-
 
 interface AddNewCustomerModalProps {
   isVisible: boolean;
@@ -24,47 +23,99 @@ const AddPriceOffers: React.FC<AddNewCustomerModalProps> = ({
 }) => {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    // Keyboard event listener'ları
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e: KeyboardEvent) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   const handleSave = () => {
     console.log("Yeni fiyat teklifi:", { name, email });
+    Keyboard.dismiss();
     onClose();
     setName("");
     setEmail("");
   };
 
+  const handleClose = () => {
+    Keyboard.dismiss();
+    onClose();
+  };
+
   return (
     <Modal
       isVisible={isVisible}
-      onBackdropPress={onClose}
-      onSwipeComplete={onClose}
+      onBackdropPress={handleClose}
+      onSwipeComplete={handleClose}
       swipeDirection="down"
       style={styles.modal}
       propagateSwipe
+      avoidKeyboard={false} // ✨ False yapıyoruz, kendi kontrol edeceğiz
+      useNativeDriver={false}
     >
-      <View style={styles.sheet}>
+      <View
+        style={[
+          styles.sheet,
+          keyboardHeight > 0 && {
+            marginBottom: Platform.OS === "ios" ? keyboardHeight : 0,
+          },
+        ]}
+      >
         <View style={styles.dragIndicator} />
-        <Text style={styles.title}>Yeni Fiyat Teklifi Oluştur</Text>
 
-        <Text style={styles.label}>Ad Soyad</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Müşteri adını giriniz"
-          value={name}
-          onChangeText={setName}
-        />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+          bounces={false}
+        >
+          <Text style={styles.title}>Yeni Fiyat Teklifi Oluştur</Text>
 
-        <Text style={styles.label}>E-posta</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="E-posta adresini giriniz"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
+          <Text style={styles.label}>Ad Soyad</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Müşteri adını giriniz"
+            value={name}
+            onChangeText={setName}
+            returnKeyType="next"
+            blurOnSubmit={false}
+          />
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Kaydet</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>E-posta</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="E-posta adresini giriniz"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+          />
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Kaydet</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     </Modal>
   );
@@ -82,7 +133,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 20,
-    maxHeight: "70%",
+    maxHeight: "80%", // ✨ Biraz daha yükselttik
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   dragIndicator: {
     width: 40,
@@ -110,6 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
+    backgroundColor: "#fff",
   },
   saveButton: {
     backgroundColor: "#00A6A6",

@@ -12,14 +12,12 @@ interface LocationState {
   address: string;
 }
 
-// YENİ: Map koordinatları
 interface MapCoordinatesState {
   latitude: number | null;
   longitude: number | null;
   isSet: boolean;
 }
 
-// YENİ: Gallery durumu
 interface GalleryStatusState {
   hasCoverImage: boolean;
   totalImages: number;
@@ -171,7 +169,6 @@ const createAdSlice = createSlice({
       state.location = { ...state.location, ...action.payload };
     },
 
-    // YENİ: Map koordinatlarını set et
     setMapCoordinates: (state, action: PayloadAction<{ latitude: number; longitude: number }>) => {
       state.mapCoordinates = {
         latitude: action.payload.latitude,
@@ -180,12 +177,10 @@ const createAdSlice = createSlice({
       };
     },
 
-    // YENİ: Map koordinatlarını temizle
     clearMapCoordinates: (state) => {
       state.mapCoordinates = initialState.mapCoordinates;
     },
 
-    // YENİ: Gallery durumunu güncelle
     setGalleryStatus: (state, action: PayloadAction<{ hasCoverImage?: boolean; totalImages?: number }>) => {
       if (action.payload.hasCoverImage !== undefined) {
         state.galleryStatus.hasCoverImage = action.payload.hasCoverImage;
@@ -193,12 +188,10 @@ const createAdSlice = createSlice({
       if (action.payload.totalImages !== undefined) {
         state.galleryStatus.totalImages = action.payload.totalImages;
       }
-      // En az 1 resim varsa valid
       state.galleryStatus.isValid = 
         state.galleryStatus.hasCoverImage || state.galleryStatus.totalImages > 0;
     },
 
-    // YENİ: Gallery durumunu temizle
     clearGalleryStatus: (state) => {
       state.galleryStatus = initialState.galleryStatus;
     },
@@ -275,7 +268,6 @@ const createAdSlice = createSlice({
         address: property.address || "",
       };
 
-      // Map koordinatlarını yükle
       if (property.latitude && property.longitude) {
         state.mapCoordinates = {
           latitude: parseFloat(property.latitude),
@@ -284,7 +276,6 @@ const createAdSlice = createSlice({
         };
       }
 
-      // Gallery durumunu yükle
       if (property.cover || (property.galleries && property.galleries.length > 0)) {
         const totalImages = property.galleries?.reduce(
           (sum: number, cat: any) => sum + (cat.images?.length || 0), 0

@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingBottom: 70
   },
   headerSection: {
     paddingHorizontal: 10,

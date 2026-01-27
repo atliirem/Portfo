@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 
-import { setExtraFeature } from "../../redux/Slice/formSlice";
+import { setExtraFeature, clearExtraFeatures } from "../../redux/Slice/formSlice";
 import { useAppDispatch, useAppSelector } from "../../redux/Hooks";
 import { getPropertyFeatures } from "../../../api";
 
@@ -126,6 +126,18 @@ export const PropertyFeatureForm: React.FC<PropertyFeatureFormProps> = ({
   const isInitializedRef = useRef<boolean>(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // ✅ Component unmount olduğunda form'u temizle
+  useEffect(() => {
+    return () => {
+      console.log("🧹 Component unmount - form tamamen temizleniyor");
+      dispatch(clearExtraFeatures());
+      setFormValues({});
+      setErrors({});
+      setTouched({});
+      isInitializedRef.current = false;
+    };
+  }, [dispatch]);
+
   useEffect(() => {
     if (!propertyTypeId) return;
 
@@ -138,6 +150,7 @@ export const PropertyFeatureForm: React.FC<PropertyFeatureFormProps> = ({
       setErrors({});
       setTouched({});
       isInitializedRef.current = false;
+      dispatch(clearExtraFeatures());
     }
     
     prevPropertyTypeIdRef.current = propertyTypeId;
@@ -413,7 +426,6 @@ export const PropertyFeatureForm: React.FC<PropertyFeatureFormProps> = ({
     const inputValue = getInputValue(value);
     const hasError = touched[feature.id] && errors[feature.id];
     
-    // ✅ DEĞİŞİKLİK: touched kontrolü kaldırıldı - direkt kırmızı göster
     const isEmpty = isEmptyValue(value);
     const showRequiredBorder = isRequired && isEmpty;
 

@@ -5,7 +5,7 @@ import { AuthService } from "./AuthService";
 import { setUserFromStorage } from "../redux/Slice/authSlice";
 import { AppDispatch, RootState } from "../redux/store";
 
-export default function AppLayout({ children }: any) {
+export default function Appk({ children }: any) {
   const dispatch = useDispatch<AppDispatch>();
   const { user, token } = useSelector((state: RootState) => state.auth);
   const [isInitializing, setIsInitializing] = React.useState(true);

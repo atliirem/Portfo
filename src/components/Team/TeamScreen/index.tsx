@@ -30,7 +30,7 @@ const TeamScreen: React.FC = () => {
     dispatch(getTeam());
   };
 
-  // Personel durumunu değiştir
+
   const handleToggleStatus = (personalId: number, currentStatus: boolean | undefined) => {
     const actionText = currentStatus ? "pasif" : "aktif";
 

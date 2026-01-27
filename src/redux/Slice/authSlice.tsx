@@ -7,6 +7,7 @@ import {
   changePasswordThunk,
   verifyPasswordCodeThunk 
 } from "../../../api";
+import { AuthService } from "../../services/AuthService"
 
 export interface User {
   id: number;
@@ -32,6 +33,7 @@ export interface AuthState {
   verifyCodeLoading: boolean;
   verifyCodeError: string | null;
   verifyCodeSuccess: boolean;
+  isInitialized: boolean; 
 }
 
 const initialState: AuthState = {
@@ -45,6 +47,7 @@ const initialState: AuthState = {
   verifyCodeLoading: false,
   verifyCodeError: null,
   verifyCodeSuccess: false,
+  isInitialized: false,
 };
 
 const authSlice = createSlice({
@@ -62,14 +65,16 @@ const authSlice = createSlice({
       state.verifyCodeError = null;
       state.verifyCodeSuccess = false;
     },
-    setUserFromStorage: (state, action: PayloadAction<User>) => {
-      console.log("setUserFromStorage reducer called with:", action.payload);
+    setUserFromStorage: (state, action: PayloadAction<User | null>) => {
+      console.log("setUserFromStorage reducer called with:", action.payload?.email || "null");
       state.user = action.payload;
       state.token = action.payload?.token || null;
+      state.isInitialized = true; 
     },
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
+      state.isInitialized = true;
     },
   },
   extraReducers: (builder) => {
@@ -83,7 +88,13 @@ const authSlice = createSlice({
         state.error = null;
         state.user = action.payload;
         state.token = action.payload?.token || null;
+        state.isInitialized = true;
         console.log("Login successful, user set:", action.payload.email);
+        
+
+        AuthService.setUser(action.payload).catch(err => 
+          console.error(" AsyncStorage save error:", err)
+        );
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -99,7 +110,13 @@ const authSlice = createSlice({
         state.error = null;
         state.user = action.payload;
         state.token = action.payload?.token || null;
+        state.isInitialized = true;
         console.log("SignUp successful, user set:", action.payload.email);
+        
+
+        AuthService.setUser(action.payload).catch(err => 
+          console.error("AsyncStorage save error:", err)
+        );
       })
       .addCase(signUpThunk.rejected, (state, action) => {
         state.loading = false;
@@ -114,13 +131,24 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;  
         state.error = null;
+        state.isInitialized = true;
         console.log("Logout successful");
+        
+
+        AuthService.logout().catch(err => 
+          console.error(" AsyncStorage clear error:", err)
+        );
       })
       .addCase(logoutThunk.rejected, (state, action) => {
         state.loading = false;
         state.user = null;
         state.token = null; 
         state.error = action.payload as string;
+        
+
+        AuthService.logout().catch(err => 
+          console.error("AsyncStorage clear error:", err)
+        );
       })
 
       .addCase(changePasswordThunk.pending, (state) => {
@@ -163,6 +191,13 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.user = action.payload;
+        
+
+        if (action.payload.token) {
+          AuthService.setUser(action.payload).catch(err => 
+            console.error("AsyncStorage update error:", err)
+          );
+        }
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
