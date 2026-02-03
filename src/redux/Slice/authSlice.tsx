@@ -1,5 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   loginThunk,
   signUpThunk,
@@ -9,8 +8,7 @@ import {
   verifyPasswordCodeThunk,
 } from "../../../api";
 import { forgetPasswordThunk, forgetPushNewPasswordThunk } from "../../../api/publicApi";
-
-const AUTH_KEY = "@AUTH";
+import { AuthService } from "../../services/AuthService";
 
 export interface User {
   id: number;
@@ -66,22 +64,6 @@ const initialState: AuthState = {
   forgetPushError: null,
 };
 
-
-export const loadAuth = createAsyncThunk("auth/load", async () => {
-  try {
-    const json = await AsyncStorage.getItem(AUTH_KEY);
-    return json ? JSON.parse(json) : null;
-  } catch {
-    await AsyncStorage.removeItem(AUTH_KEY);
-    return null;
-  }
-});
-
-
-export const clearAuthStorage = createAsyncThunk("auth/clearStorage", async () => {
-  await AsyncStorage.removeItem(AUTH_KEY);
-});
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -104,6 +86,11 @@ const authSlice = createSlice({
       state.verifyCodeError = null;
       state.verifyCodeSuccess = false;
     },
+    setUserFromStorage: (state, action: PayloadAction<User | null>) => {
+      state.user = action.payload;
+      state.token = action.payload?.token || null;
+      state.isInitialized = true;
+    },
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
@@ -112,28 +99,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-
-      .addCase(loadAuth.pending, (state) => {
-        state.isInitialized = false;
-      })
-      .addCase(loadAuth.fulfilled, (state, action: PayloadAction<User | null>) => {
-        state.isInitialized = true;
-        if (action.payload) {
-          state.user = action.payload;
-          state.token = action.payload.token;
-        }
-      })
-      .addCase(loadAuth.rejected, (state) => {
-        state.isInitialized = true;
-      })
-
-
-      .addCase(clearAuthStorage.fulfilled, (state) => {
-        state.user = null;
-        state.token = null;
-      })
-
-
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,14 +108,12 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload.token;
         state.isInitialized = true;
-   
-        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
+        AuthService.setUser(action.payload);
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-
 
       .addCase(signUpThunk.pending, (state) => {
         state.loading = true;
@@ -161,23 +124,19 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload.token;
         state.isInitialized = true;
-  
-        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
+        AuthService.setUser(action.payload);
       })
       .addCase(signUpThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
 
-
       .addCase(logoutThunk.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isInitialized = true;
-
-        AsyncStorage.removeItem(AUTH_KEY);
+        AuthService.logout();
       })
-
 
       .addCase(changePasswordThunk.pending, (state) => {
         state.passwordChangeLoading = true;
@@ -192,7 +151,6 @@ const authSlice = createSlice({
         state.passwordChangeError = action.payload as string;
       })
 
-
       .addCase(verifyPasswordCodeThunk.pending, (state) => {
         state.verifyCodeLoading = true;
         state.verifyCodeSuccess = false;
@@ -205,7 +163,6 @@ const authSlice = createSlice({
         state.verifyCodeLoading = false;
         state.verifyCodeError = action.payload as string;
       })
-
 
       .addCase(forgetPasswordThunk.pending, (state) => {
         state.forgetPasswordLoading = true;
@@ -221,7 +178,6 @@ const authSlice = createSlice({
         state.forgetPasswordError = action.payload as string;
       })
 
-
       .addCase(forgetPushNewPasswordThunk.pending, (state) => {
         state.forgetPushLoading = true;
         state.forgetPushError = null;
@@ -236,11 +192,9 @@ const authSlice = createSlice({
         state.forgetPushError = action.payload as string;
       })
 
-
       .addCase(updateProfile.fulfilled, (state, action: PayloadAction<User>) => {
         state.user = action.payload;
-
-        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
+        AuthService.setUser(action.payload);
       });
   },
 });
@@ -249,6 +203,7 @@ export const {
   clearForgetPasswordState,
   clearForgetPushState,
   clearPasswordChangeState,
+  setUserFromStorage,
   clearAuth,
 } = authSlice.actions;
 
