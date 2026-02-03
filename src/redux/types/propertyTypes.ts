@@ -122,7 +122,7 @@ export interface Gallery {
   images: GalleryImage[];
 }
 
-// COMPANY
+
 export interface Company {
   id: number;
   title: string;
@@ -130,13 +130,13 @@ export interface Company {
   badges: any[];
 }
 
-// MAP
+
 export interface MapData {
   latitude: string;
   longitude: string;
 }
 
-// COMMISSION
+
 export interface CommissionRates {
   buyer: number | null;
   seller: number | null;
