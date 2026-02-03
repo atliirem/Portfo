@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
   View,
+  Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
@@ -10,70 +10,85 @@ import {
   ScrollView,
 } from "react-native";
 import Modal from "react-native-modal";
-import { useDispatch, useSelector } from "react-redux";
 import Ionicons from "@react-native-vector-icons/ionicons";
+import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { updateCustomer } from "../../../api";
+import { updatePersonalProfileThunk, getRolesThunk } from "../../../api";
 
-interface UpdateCustomerModalProps {
+interface Props {
   isVisible: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
-  customer: {
+  personal: {
     id: number;
     name: string;
     email?: string;
-    phone?: {
-      code?: string;
-      number?: string;
-    };
-    contacts?: {
+    contact?: {
+      phone?: { code: string; number: string | null };
       email?: string;
-      phone?: string;
+      whatsapp?: string;
     };
-    locale?: string;
+    roles?: { id: number; title: string; key?: string }[];
+    role?: string;
   } | null;
 }
 
-const LANGUAGES = [
-  { code: "tr", label: "Türkçe" },
-  { code: "en", label: "English" },
-  { code: "de", label: "Deutsch" },
-];
-
-const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
+const EditPersonalModal: React.FC<Props> = ({
   isVisible,
+  personal,
   onClose,
-  onSuccess,
-  customer,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading } = useSelector((state: RootState) => state.company);
+  const { loading, roles, rolesLoading } = useSelector(
+    (state: RootState) => state.company
+  );
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneCode, setPhoneCode] = useState("90");
-  const [locale, setLocale] = useState("tr");
-  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [showRolePicker, setShowRolePicker] = useState(false);
+
+  // Roller yükle
+  useEffect(() => {
+    if (isVisible && roles.length === 0) {
+      console.log("📥 Roller yükleniyor...");
+      dispatch(getRolesThunk());
+    }
+  }, [isVisible, dispatch, roles.length]);
 
   useEffect(() => {
-    if (!customer) return;
+    if (!personal) return;
 
-    setName(customer.name ?? "");
-    setEmail(customer.contacts?.email ?? customer.email ?? "");
-    setLocale(customer.locale ?? "tr");
+    console.log("🔍 EditPersonalModal - Gelen personal:", personal);
+
+    setName(personal.name ?? "");
+    setEmail(personal.contact?.email ?? personal.email ?? "");
     
-    if (customer.phone && typeof customer.phone === "object") {
-      setPhoneCode(customer.phone.code ?? "90");
-      setPhoneNumber(customer.phone.number ?? "");
-    } else if (customer.contacts?.phone) {
-      setPhoneNumber(customer.contacts.phone);
+    if (personal.contact?.phone) {
+      setPhoneCode(personal.contact.phone.code ?? "90");
+      setPhoneNumber(personal.contact.phone.number ?? "");
     }
-  }, [customer]);
+
+    // Role - roles array'inden veya direkt role field'dan
+    if (personal.roles && personal.roles.length > 0 && personal.roles[0].key) {
+      setSelectedRole(personal.roles[0].key);
+      console.log("📋 Mevcut rol (roles array):", personal.roles[0]);
+    } else if (personal.role) {
+      setSelectedRole(personal.role);
+      console.log("📋 Mevcut rol (role field):", personal.role);
+    }
+
+    console.log("📋 Modal state:", {
+      name: personal.name,
+      email: personal.contact?.email ?? personal.email,
+      phone: personal.contact?.phone,
+      selectedRole: personal.roles?.[0]?.key ?? personal.role,
+    });
+  }, [personal]);
 
   const handleSave = async () => {
-    if (!customer) return;
+    if (!personal) return;
 
     if (!name.trim()) {
       Alert.alert("Hata", "İsim boş olamaz");
@@ -81,46 +96,54 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
     }
 
     try {
+      const updateData: {
+        name: string;
+        phone?: string;
+        phone_code?: string;
+        role?: string;
+        locale?: string;
+      } = {
+        name: name.trim(),
+        locale: "tr",
+      };
+
+      if (phoneNumber.trim()) {
+        updateData.phone = phoneNumber.trim();
+        updateData.phone_code = phoneCode;
+      }
+
+      if (selectedRole) {
+        updateData.role = selectedRole;
+      }
+
+      console.log("📤 Gönderilen veri:", updateData);
+
       await dispatch(
-        updateCustomer({
-          id: customer.id,
-          body: {
-            name: name.trim(),
-            email: email.trim() || undefined,
-            phone: phoneNumber.trim()
-              ? {
-                  code: phoneCode,
-                  number: phoneNumber.trim(),
-                }
-              : undefined,
-            locale: locale,
-          },
-        }) as any
+        updatePersonalProfileThunk({
+          personalId: personal.id,
+          data: updateData,
+        })
       ).unwrap();
 
-      Alert.alert("Başarılı", "Müşteri güncellendi", [
-        {
-          text: "Tamam",
-          onPress: () => {
-            onSuccess?.();
-            onClose();
-          },
-        },
-      ]);
+      Alert.alert("Başarılı", "Personel güncellendi");
+      onClose();
     } catch (err: any) {
+      console.error("❌ Güncelleme hatası:", err);
       Alert.alert("Hata", err || "Güncelleme başarısız");
     }
   };
 
-  const getLanguageLabel = () => {
-    return LANGUAGES.find(lang => lang.code === locale)?.label || "Türkçe";
+  const getRoleTitle = () => {
+    if (!selectedRole) return "Rol Seçin";
+    const role = roles.find(r => r.key === selectedRole);
+    return role?.title || "Rol Seçin";
   };
 
-  if (!customer) return null;
+  if (!personal) return null;
 
   return (
-    <Modal
-      isVisible={isVisible}
+    <Modal 
+      isVisible={isVisible} 
       onBackdropPress={onClose}
       onSwipeComplete={onClose}
       swipeDirection="down"
@@ -128,11 +151,11 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
     >
       <View style={styles.sheet}>
         <View style={styles.dragIndicator} />
-
+        
         <Text style={styles.title}>Düzenle</Text>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* İsim ve Soyisim */}
+          {/* Ad Soyad */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>İsim ve Soyisim</Text>
             <TextInput
@@ -149,11 +172,11 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
             <TextInput
               style={[styles.input, styles.inputDisabled]}
               value={email}
-              onChangeText={setEmail}
               keyboardType="email-address"
               placeholderTextColor="#999"
               autoCapitalize="none"
               editable={false}
+              selectTextOnFocus={false}
             />
           </View>
 
@@ -180,39 +203,46 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
             </View>
           </View>
 
-          {/* Dil Seçici */}
+          {/* Rol Seçici */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Dil</Text>
+            <Text style={styles.fieldLabel}>Rol</Text>
             <TouchableOpacity 
               style={styles.pickerButton}
-              onPress={() => setShowLanguagePicker(!showLanguagePicker)}
+              onPress={() => setShowRolePicker(!showRolePicker)}
+              disabled={rolesLoading}
             >
-              <Text style={styles.pickerText}>{getLanguageLabel()}</Text>
-              <Ionicons 
-                name={showLanguagePicker ? "chevron-up" : "chevron-forward"} 
-                size={20} 
-                color="#999" 
-              />
+              {rolesLoading ? (
+                <ActivityIndicator size="small" color="#999" />
+              ) : (
+                <>
+                  <Text style={styles.pickerText}>{getRoleTitle()}</Text>
+                  <Ionicons 
+                    name={showRolePicker ? "chevron-up" : "chevron-forward"} 
+                    size={20} 
+                    color="#999" 
+                  />
+                </>
+              )}
             </TouchableOpacity>
             
-            {showLanguagePicker && (
+            {showRolePicker && roles.length > 0 && (
               <View style={styles.pickerOptions}>
-                {LANGUAGES.map((lang) => (
+                {roles.map((role) => (
                   <TouchableOpacity
-                    key={`lang-${lang.code}`}
+                    key={role.key}
                     style={styles.pickerOption}
                     onPress={() => {
-                      setLocale(lang.code);
-                      setShowLanguagePicker(false);
+                      setSelectedRole(role.key);
+                      setShowRolePicker(false);
                     }}
                   >
                     <Text style={[
                       styles.pickerOptionText,
-                      locale === lang.code && styles.pickerOptionTextActive
+                      selectedRole === role.key && styles.pickerOptionTextActive
                     ]}>
-                      {lang.label}
+                      {role.title}
                     </Text>
-                    {locale === lang.code && (
+                    {selectedRole === role.key && (
                       <Ionicons name="checkmark" size={20} color="#25C5D1" />
                     )}
                   </TouchableOpacity>
@@ -224,24 +254,23 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
           {/* Düzenle Butonu */}
           <TouchableOpacity
             style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-            activeOpacity={0.9}
             onPress={handleSave}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.saveButtonText}>Düzenle</Text>
+              <Text style={styles.saveText}>Düzenle</Text>
             )}
           </TouchableOpacity>
 
           {/* İptal Butonu */}
           <TouchableOpacity 
+            onPress={onClose} 
             style={styles.cancelButton}
-            onPress={onClose}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>İptal</Text>
+            <Text style={styles.cancelText}>İptal</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -249,18 +278,18 @@ const UpdateCustomerModal: React.FC<UpdateCustomerModalProps> = ({
   );
 };
 
-export default UpdateCustomerModal;
+export default EditPersonalModal;
 
 const styles = StyleSheet.create({
-  modal: {
-    justifyContent: "flex-end",
-    margin: 0,
+  modal: { 
+    justifyContent: "flex-end", 
+    margin: 0 
   },
   sheet: {
     backgroundColor: "#fff",
+    padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
     maxHeight: "90%",
   },
   dragIndicator: {
@@ -271,11 +300,11 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    textAlign: "center",
+  title: { 
+    fontSize: 20, 
+    fontWeight: "600", 
     marginBottom: 24,
+    textAlign: "center",
     color: "#25C5D1",
   },
   fieldContainer: {
@@ -348,6 +377,7 @@ const styles = StyleSheet.create({
     borderColor: "#e0e0e0",
     borderRadius: 8,
     backgroundColor: "#fff",
+    maxHeight: 200,
   },
   pickerOption: {
     flexDirection: "row",
@@ -368,28 +398,30 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: "#25C5D1",
+    height: 50,
     borderRadius: 8,
-    paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
   },
   saveButtonDisabled: {
     opacity: 0.6,
   },
-  saveButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
+  saveText: { 
+    color: "#fff", 
+    fontWeight: "600", 
+    fontSize: 16 
   },
-  cancelButton: {
-    backgroundColor: "#e0e0e0",
-    borderRadius: 8,
-    paddingVertical: 14,
+  cancelButton: { 
+    marginTop: 12, 
     alignItems: "center",
-    marginTop: 12,
+    backgroundColor: "#e0e0e0",
+    height: 50,
+    borderRadius: 8,
+    justifyContent: "center",
     marginBottom: 20,
   },
-  cancelButtonText: {
+  cancelText: { 
     color: "#666",
     fontSize: 16,
     fontWeight: "500",

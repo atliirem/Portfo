@@ -16,6 +16,8 @@ import { DetailScreen } from "../screens/ProposalsDetaill/DetailScreens";
 
 import { AuthService } from "../services/AuthService";
 import { setUserFromStorage } from "../redux/Slice/authSlice";
+import VerifyCode from "../screens/Update/LostPassword/VerifyCode";
+import PushNewPassword from "../screens/Update/LostPassword/PushNewPassword";
 
 
 
@@ -45,6 +47,7 @@ export type RootStackParamList = {
   Pass: undefined;
   Komisyon: undefined;
   InvitationsScreen: undefined;
+  SelectedPropertiesScreen: undefined;
 
   EditProperty: { id: number };
   MySubscriptionsScreen:  {id: number}
@@ -56,6 +59,7 @@ export type RootStackParamList = {
     images: { uri: string }[];
     startIndex: number;
   };
+  ChangePassword: undefined;
   CompanyDetail: {id: undefined}
   CompanyLoc: {id: number}
   SentOffersDetail: {id: number}
@@ -64,6 +68,10 @@ export type RootStackParamList = {
   DetailScreen: {id: number, code: number};
   EditCompany: undefined;
   CustomerOffersDetail: {id: number};
+  // VerifyCode: {email: string};
+  // PushNewPassword: {token: string, email: string};
+  VerifyCode: undefined;
+  PushNewPassword: { email?: string };
 
   CompanyDetailScreen: {id: number}
 
@@ -123,7 +131,9 @@ export default function RootNavigator() {
 
         <>
           <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="SignUp" component={SignUp} />
+          <Stack.Screen name="VerifyCode" component={VerifyCode} />
+          <Stack.Screen name="PushNewPassword" component={PushNewPassword} />
+
         </>
       )}
     </Stack.Navigator>

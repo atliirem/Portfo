@@ -75,7 +75,7 @@ const CategoryFilterModal: React.FC<Props> = ({ isVisible, onClose }) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedParents((prev) =>
       prev.includes(parentLabel)
-        ? prev.filter((x) => x !== parentLabel)
+        ? prev.filter((x) => x!== parentLabel)
         : [...prev, parentLabel]
     );
   };

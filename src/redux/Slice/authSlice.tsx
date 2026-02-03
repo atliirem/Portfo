@@ -1,12 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { 
-  loginThunk, 
-  signUpThunk, 
-  updateProfile, 
-  logoutThunk, 
+import {
+  loginThunk,
+  signUpThunk,
+  updateProfile,
+  logoutThunk,
   changePasswordThunk,
-  verifyPasswordCodeThunk 
+  verifyPasswordCodeThunk,
 } from "../../../api";
+import { forgetPasswordThunk, forgetPushNewPasswordThunk } from "../../../api/publicApi";
 import { AuthService } from "../../services/AuthService";
 
 export interface User {
@@ -25,7 +26,7 @@ export interface User {
 
 export interface AuthState {
   user: User | null;
-  token: string | null;  
+  token: string | null;
   loading: boolean;
   error: string | null;
   passwordChangeLoading: boolean;
@@ -34,12 +35,18 @@ export interface AuthState {
   verifyCodeLoading: boolean;
   verifyCodeError: string | null;
   verifyCodeSuccess: boolean;
-  isInitialized: boolean; 
+  forgetPasswordLoading: boolean;
+  forgetPasswordSuccess: boolean;
+  forgetPasswordError: string | null;
+  isInitialized: boolean;
+  forgetPushLoading: boolean;
+  forgetPushSuccess: boolean;
+  forgetPushError: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
-  token: null,  
+  token: null,
   loading: false,
   error: null,
   passwordChangeLoading: false,
@@ -48,15 +55,28 @@ const initialState: AuthState = {
   verifyCodeLoading: false,
   verifyCodeError: null,
   verifyCodeSuccess: false,
+  forgetPasswordLoading: false,
+  forgetPasswordSuccess: false,
+  forgetPasswordError: null,
   isInitialized: false,
+  forgetPushLoading: false,
+  forgetPushSuccess: false,
+  forgetPushError: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
+    clearForgetPasswordState: (state) => {
+      state.forgetPasswordLoading = false;
+      state.forgetPasswordSuccess = false;
+      state.forgetPasswordError = null;
+    },
+    clearForgetPushState: (state) => {
+      state.forgetPushLoading = false;
+      state.forgetPushSuccess = false;
+      state.forgetPushError = null;
     },
     clearPasswordChangeState: (state) => {
       state.passwordChangeLoading = false;
@@ -69,7 +89,7 @@ const authSlice = createSlice({
     setUserFromStorage: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
       state.token = action.payload?.token || null;
-      state.isInitialized = true; 
+      state.isInitialized = true;
     },
     clearAuth: (state) => {
       state.user = null;
@@ -85,18 +105,14 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
-        state.error = null;
         state.user = action.payload;
-        state.token = action.payload?.token || null;
+        state.token = action.payload.token;
         state.isInitialized = true;
-        
-        AuthService.setUser(action.payload).catch(err => 
-          console.error("AsyncStorage save error:", err)
-        );
+        AuthService.setUser(action.payload);
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || "Giriş başarısız";
+        state.error = action.payload as string;
       })
 
       .addCase(signUpThunk.pending, (state) => {
@@ -105,98 +121,90 @@ const authSlice = createSlice({
       })
       .addCase(signUpThunk.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
-        state.error = null;
         state.user = action.payload;
-        state.token = action.payload?.token || null;
+        state.token = action.payload.token;
         state.isInitialized = true;
-        
-        AuthService.setUser(action.payload).catch(err => 
-          console.error("AsyncStorage save error:", err)
-        );
+        AuthService.setUser(action.payload);
       })
       .addCase(signUpThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || "Kayıt başarısız";
+        state.error = action.payload as string;
       })
 
-      .addCase(logoutThunk.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(logoutThunk.fulfilled, (state) => {
-        state.loading = false;
         state.user = null;
-        state.token = null;  
-        state.error = null;
+        state.token = null;
         state.isInitialized = true;
-        
-        AuthService.logout().catch(err => 
-          console.error("AsyncStorage clear error:", err)
-        );
-      })
-      .addCase(logoutThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.user = null;
-        state.token = null; 
-        state.error = action.payload as string;
-        
-        AuthService.logout().catch(err => 
-          console.error("AsyncStorage clear error:", err)
-        );
+        AuthService.logout();
       })
 
       .addCase(changePasswordThunk.pending, (state) => {
         state.passwordChangeLoading = true;
-        state.passwordChangeError = null;
         state.passwordChangeSuccess = false;
       })
       .addCase(changePasswordThunk.fulfilled, (state) => {
         state.passwordChangeLoading = false;
-        state.passwordChangeError = null;
         state.passwordChangeSuccess = true;
       })
       .addCase(changePasswordThunk.rejected, (state, action) => {
         state.passwordChangeLoading = false;
         state.passwordChangeError = action.payload as string;
-        state.passwordChangeSuccess = false;
       })
 
       .addCase(verifyPasswordCodeThunk.pending, (state) => {
         state.verifyCodeLoading = true;
-        state.verifyCodeError = null;
         state.verifyCodeSuccess = false;
       })
       .addCase(verifyPasswordCodeThunk.fulfilled, (state) => {
         state.verifyCodeLoading = false;
-        state.verifyCodeError = null;
         state.verifyCodeSuccess = true;
       })
       .addCase(verifyPasswordCodeThunk.rejected, (state, action) => {
         state.verifyCodeLoading = false;
         state.verifyCodeError = action.payload as string;
-        state.verifyCodeSuccess = false;
       })
 
-      .addCase(updateProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(forgetPasswordThunk.pending, (state) => {
+        state.forgetPasswordLoading = true;
+        state.forgetPasswordSuccess = false;
+        state.forgetPasswordError = null;
       })
+      .addCase(forgetPasswordThunk.fulfilled, (state) => {
+        state.forgetPasswordLoading = false;
+        state.forgetPasswordSuccess = true;
+      })
+      .addCase(forgetPasswordThunk.rejected, (state, action) => {
+        state.forgetPasswordLoading = false;
+        state.forgetPasswordError = action.payload as string;
+      })
+
+      .addCase(forgetPushNewPasswordThunk.pending, (state) => {
+        state.forgetPushLoading = true;
+        state.forgetPushError = null;
+        state.forgetPushSuccess = false;
+      })
+      .addCase(forgetPushNewPasswordThunk.fulfilled, (state) => {
+        state.forgetPushLoading = false;
+        state.forgetPushSuccess = true;
+      })
+      .addCase(forgetPushNewPasswordThunk.rejected, (state, action) => {
+        state.forgetPushLoading = false;
+        state.forgetPushError = action.payload as string;
+      })
+
       .addCase(updateProfile.fulfilled, (state, action: PayloadAction<User>) => {
-        state.loading = false;
-        state.error = null;
         state.user = action.payload;
-        
-        if (action.payload.token) {
-          AuthService.setUser(action.payload).catch(err => 
-            console.error("AsyncStorage update error:", err)
-          );
-        }
-      })
-      .addCase(updateProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = (action.payload as string) || "Profil güncelleme hatası";
+        AuthService.setUser(action.payload);
       });
   },
 });
 
-export const { clearError, clearPasswordChangeState, setUserFromStorage, clearAuth } = authSlice.actions;
+export const {
+  clearForgetPasswordState,
+  clearForgetPushState,
+  clearPasswordChangeState,
+  setUserFromStorage,
+  clearAuth,
+} = authSlice.actions;
+
 export default authSlice.reducer;

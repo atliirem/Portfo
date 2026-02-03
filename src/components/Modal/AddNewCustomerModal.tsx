@@ -16,11 +16,13 @@ import { createCustomerThunk } from "../../../api";
 interface AddNewCustomerModalProps {
   isVisible: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const AddNewCustomerModal: React.FC<AddNewCustomerModalProps> = ({
   isVisible,
   onClose,
+  onSuccess,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -47,11 +49,13 @@ const AddNewCustomerModal: React.FC<AddNewCustomerModalProps> = ({
     try {
       await dispatch(createCustomerThunk(payload)).unwrap();
 
-      onClose();
       setName("");
       setEmail("");
       setPhone("");
       setPhoneCode("90");
+      
+      onSuccess?.();
+      onClose();
     } catch (err) {
       console.log("Create customer error:", err);
     }

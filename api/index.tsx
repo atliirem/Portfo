@@ -121,6 +121,8 @@ export const changePasswordThunk = createAsyncThunk(
 
 interface VerifyPasswordCodeParams {
   code: string;
+  email: string;
+  locale: "tr";
 }
 
 export const verifyPasswordCodeThunk = createAsyncThunk(
@@ -143,6 +145,9 @@ export const verifyPasswordCodeThunk = createAsyncThunk(
     }
   }
 );
+
+
+
 export const getCustomerProposals = createAsyncThunk(
   "auth/getCustomerProposals",
   async (params: { customer_id: string }, { rejectWithValue }) => {
@@ -1241,7 +1246,6 @@ export const getCreatePriceOffer = createAsyncThunk(
   }
 );
 
-  // müşteri seç
 
 export const updateCustomer = createAsyncThunk(
   "customer/updateCustomer",
@@ -1250,23 +1254,53 @@ export const updateCustomer = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+      // FormData formatında gönder (EditPersonalModal gibi)
+      const formData = new FormData();
+      
+      if (body.name) formData.append("name", body.name);
+      if (body.email) formData.append("email", body.email);
+      
+      // Telefon - obje formatında geliyorsa
+      if (body.phone) {
+        if (typeof body.phone === "object") {
+          formData.append("phone", body.phone.number);
+          formData.append("phone_code", body.phone.code);
+        } else {
+          formData.append("phone", body.phone);
+        }
+      }
+
+      formData.append("locale", body.locale || "tr");
+
       const res = await api.post(
         `/auth/company/customers/${id}/update`,
-        body
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-     
-      return { id, data: res.data.data };
+      console.log("API Response:", res.data);
+
+      if (res.data.status === "success") {
+        return { id, data: res.data.data };
+      }
+
+      return rejectWithValue(res.data.message || "Müşteri güncellenemedi");
     } catch (err: any) {
+      console.error("updateCustomer error:", err.response?.data || err);
+      
       const msg =
         err?.response?.data?.errors?.body?.[0] ||
+        err?.response?.data?.message ||
         err?.message ||
         "Müşteri güncellenemedi";
       return rejectWithValue(msg);
     }
   }
 );
-
 export const getAllSubsrictions = createAsyncThunk(
   'allSubsrictions/getAllSubsrictions',
   async (_, { rejectWithValue }) => {
@@ -1574,13 +1608,13 @@ export const getFilteredProperties = createAsyncThunk(
       if (selectedDistrict) formData.append("district_id", selectedDistrict);
       if (selectedStreet) formData.append("street_id", selectedStreet);
 
-      // Fiyat filtreleri
+  
       if (minPrice) formData.append("min_sell_price", minPrice);
       if (maxPrice) formData.append("max_sell_price", maxPrice);
       if (selectedCurrencyId) formData.append("currency_id", String(selectedCurrencyId)); 
 
-      // Debug
-      console.log("🔍 Fiyat filtreleri:", { minPrice, maxPrice, selectedCurrencyId });
+     
+      console.log("Fiyat filtreleri:", { minPrice, maxPrice, selectedCurrencyId });
 
       const res = await api.post("/properties", formData, {
         headers: {
@@ -1676,8 +1710,6 @@ export const createProposal = createAsyncThunk(
     }
   }
 );
-
-
 
 export type CompanyUpdateArgs = {
   company_name: string;
@@ -1927,7 +1959,6 @@ export const createCustomerThunk = createAsyncThunk<
   }
 });
 
-
 export const createInvitationThunk = createAsyncThunk(
   "company/createInvitation",
   async (
@@ -2094,7 +2125,7 @@ export const updatePersonalPermissionsThunk = createAsyncThunk(
     try {
       const formData = new FormData();
       
-      // Her seçili permission için key: "1" olarak ekle
+ 
       permissions.forEach((permKey) => {
         formData.append(permKey, "1");
       });

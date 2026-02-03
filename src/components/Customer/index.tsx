@@ -1,21 +1,29 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import {
   View,
-  StyleSheet,
   FlatList,
   Text,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "@react-native-vector-icons/ionicons";
+
 import { RootState, AppDispatch } from "../../redux/store";
 import { getCustomers } from "../../../api";
-import { SafeAreaView } from "react-native-safe-area-context";
-import CustomerCard from "../Cards/CustomerCard";
-import { SearchBar } from "react-native-elements";
-import AddNewCustomerModal from "../Modal/AddNewCustomerModal";
 
-const BUTTON_HEIGHT = 56;
+import CustomerCard from "../Cards/CustomerCard";
+import AddNewCustomerModal from "../Modal/AddNewCustomerModal";
+import UpdateCustomerModal from "../Modal/UpdateCustomer";
+
+import { styles } from "./style";
 
 const CustomerScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,9 +32,15 @@ const CustomerScreen: React.FC = () => {
   );
 
   const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
   useEffect(() => {
+    dispatch(getCustomers() as any);
+  }, [dispatch]);
+
+  const refreshCustomers = useCallback(() => {
     dispatch(getCustomers() as any);
   }, [dispatch]);
 
@@ -38,8 +52,13 @@ const CustomerScreen: React.FC = () => {
     );
   }, [customers, search]);
 
-  const renderItem = useCallback(({ item }: any) => {
-    return (
+  const handleEdit = useCallback((customer: any) => {
+    setSelectedCustomer(customer);
+    setShowUpdateModal(true);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: any) => (
       <CustomerCard
         customer={{
           id: item.id,
@@ -50,10 +69,11 @@ const CustomerScreen: React.FC = () => {
           created_at: item.created_at,
           proposals: item.proposals ?? 0,
         }}
-        onEdit={() => {}}
+        onEdit={handleEdit}
       />
-    );
-  }, []);
+    ),
+    [handleEdit]
+  );
 
   if (loading) {
     return (
@@ -74,16 +94,30 @@ const CustomerScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <View style={styles.container}>
-        <SearchBar
-          placeholder="Müşteri adı ile ara..."
-          onChangeText={setSearch}
-          value={search}
-          lightTheme
-          round
-          containerStyle={styles.searchContainer}
-          inputContainerStyle={styles.searchInput}
-          inputStyle={styles.searchText}
-        />
+        
+        <View style={styles.searchContainer}>
+          <View style={styles.searchIcon}>
+            <Ionicons name="search" size={20} color="#999" />
+          </View>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Müşteri adı ile ara..."
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearch("")}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+
 
         <FlatList
           data={filteredCustomers}
@@ -94,9 +128,10 @@ const CustomerScreen: React.FC = () => {
           style={styles.list}
         />
 
+
         <View style={styles.bottomArea}>
           <TouchableOpacity
-            onPress={() => setShowModal(true)}
+            onPress={() => setShowAddModal(true)}
             style={styles.fixedButton}
             activeOpacity={0.9}
           >
@@ -104,9 +139,21 @@ const CustomerScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+
         <AddNewCustomerModal
-          isVisible={showModal}
-          onClose={() => setShowModal(false)}
+          isVisible={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={refreshCustomers}
+        />
+
+        <UpdateCustomerModal
+          isVisible={showUpdateModal}
+          customer={selectedCustomer}
+          onClose={() => {
+            setShowUpdateModal(false);
+            setSelectedCustomer(null);
+          }}
+          onSuccess={refreshCustomers}
         />
       </View>
     </SafeAreaView>
@@ -114,62 +161,3 @@ const CustomerScreen: React.FC = () => {
 };
 
 export default CustomerScreen;
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-  },
-  searchContainer: {
-    backgroundColor: "#fff",
-    borderBottomColor: "transparent",
-    borderTopColor: "transparent",
-    paddingHorizontal: 0,
-    paddingVertical: 8,
-  },
-  searchInput: {
-    backgroundColor: "#F6F6F6",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#DDD",
-    height: 40,
-  },
-  searchText: {
-    fontSize: 14,
-  },
-  list: {
-    flex: 1,
-  },
-  bottomArea: {
-    paddingVertical: 10,
-    backgroundColor: "#fff",
-  },
-  fixedButton: {
-    height: BUTTON_HEIGHT,
-    backgroundColor: "#2EC4D6",
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    maxHeight: 46,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "red",
-  },
-});

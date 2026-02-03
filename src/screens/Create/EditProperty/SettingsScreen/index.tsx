@@ -67,7 +67,7 @@ const PropertyActions: React.FC<Props> = ({ propertyId }) => {
                 text: "Tamam",
                 onPress: () => {
                   dispatch(getMyProperties(1));
-                  navigation.goBack();
+                  navigation.navigate('PropertiesDetail');
                 },
               },
             ]);

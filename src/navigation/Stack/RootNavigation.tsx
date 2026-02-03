@@ -13,7 +13,6 @@ export default function RootNavigation() {
   const { token, user } = useSelector((state: RootState) => state.auth);
   const userCompany = useSelector((state: RootState) => state.company.company);
 
-  // User login olduysa ve company yüklenmemişse, yükle
   useEffect(() => {
     if (token && user && !userCompany) {
       console.log("🏢 User company'si yükleniyor...");
@@ -21,10 +20,10 @@ export default function RootNavigation() {
     }
   }, [token, user, userCompany, dispatch]);
 
-  // Debug log
+
   useEffect(() => {
     if (token && user) {
-      console.log("🔐 Auth State:", {
+      console.log(" Auth State:", {
         hasToken: !!token,
         userEmail: user.email,
         userId: user.id,

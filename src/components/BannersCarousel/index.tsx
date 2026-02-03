@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
     marginLeft: 8,
+    marginTop: 20
   },
   center: {
     flex: 1,

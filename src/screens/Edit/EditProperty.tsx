@@ -185,7 +185,7 @@ const EditProperty = () => {
         return;
       }
 
-      const ilanNo = response?.data?.property?.no || " ";
+      const ilanNo = response?.data?.property?.no || "  ";
 
       await dispatch(getMyProperties(1)).unwrap();
 
@@ -315,7 +315,7 @@ const EditProperty = () => {
             style={[styles.backButton, isLoading && styles.disabledButton]}
             onPress={() => {
               dispatch(resetCreateAd());
-              navigation.navigate('Prof');
+              navigation.navigate('HomeScreen' as never);
             }}
             disabled={isLoading}
           >

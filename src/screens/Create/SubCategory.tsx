@@ -17,7 +17,7 @@ import Modal from "react-native-modal";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { useAppSelector } from "../../redux/Hooks";
-import { getCountries, getCities, getDistrict, getStreet } from "../../../api/filterThunk";
+import { getCountries, getCities, getDistrict, getStreet } from "../../../api/publicApi";
 import { getCurrencies, getTypes } from "../../../api";
 import { setSelectedCurrency as setSelectedCurrencyRedux } from "../../redux/Slice/currenciesSlice";
 import Location from "./Location";

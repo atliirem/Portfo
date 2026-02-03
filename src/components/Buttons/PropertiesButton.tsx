@@ -13,12 +13,11 @@ const PropertiesButton = ({ item }: { item: any }) => {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   
-  // Favori durumunu local state'te tut
   const [isFavorite, setIsFavorite] = useState(item?.in_wishlist ?? false);
   
   const toggleFavorite = useWishlistToggle(item);
 
-  // Favori toggle işlemi
+
   const handleToggleFavorite = async () => {
     try {
       await toggleFavorite();
@@ -36,7 +35,6 @@ const PropertiesButton = ({ item }: { item: any }) => {
       };
       checkCustomer();
       
-      // Sayfa focus olduğunda item'ın güncel favori durumunu al
       setIsFavorite(item?.in_wishlist ?? false);
     }, [item?.in_wishlist])
   );
@@ -65,7 +63,7 @@ const PropertiesButton = ({ item }: { item: any }) => {
 
   return (
     <View>
-      {/* Geri */}
+
       <TouchableOpacity
         style={styles.iconContainer}
         onPress={() => navigation.goBack()}
@@ -73,7 +71,7 @@ const PropertiesButton = ({ item }: { item: any }) => {
         <Ionicons name="chevron-back-outline" size={25} color="#1a8b95" />
       </TouchableOpacity>
 
-      {/* Favori */}
+
       <TouchableOpacity
         style={[
           styles.iconContainerheart,
@@ -87,7 +85,7 @@ const PropertiesButton = ({ item }: { item: any }) => {
         />
       </TouchableOpacity>
 
-      {/* Fiyat Teklifi */}
+
       <TouchableOpacity
         style={styles.iconContainerPrice}
         onPress={() => setShowModal(true)}
@@ -101,7 +99,6 @@ const PropertiesButton = ({ item }: { item: any }) => {
         onClose={() => setShowModal(false)}
       />
 
-      {/* Müşteri seçiliyse: Listeye Ekle, değilse: Müşteri Seç */}
       {selectedCustomer ? (
         <TouchableOpacity
           style={styles.iconContainerAdd}
@@ -118,7 +115,6 @@ const PropertiesButton = ({ item }: { item: any }) => {
         </TouchableOpacity>
       )}
 
-      {/* Müşteri Seçim Modalı */}
       <SelectCustomerModal
         visible={showCustomerModal}
         onClose={handleCustomerModalClose}

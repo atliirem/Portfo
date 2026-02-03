@@ -11,10 +11,14 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../navigation/RootStack";
+import EditPersonalModal from "../../Modal/EditPersonalModal";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const TeamScreen: React.FC = () => {
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedPersonal, setSelectedPersonal] = useState<any | null>(null);
+
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NavigationProp>();
   const { personals, loading, error } = useSelector((state: RootState) => state.company);
@@ -29,7 +33,6 @@ const TeamScreen: React.FC = () => {
   const handleInvitationSuccess = () => {
     dispatch(getTeam());
   };
-
 
   const handleToggleStatus = (personalId: number, currentStatus: boolean | undefined) => {
     const actionText = currentStatus ? "pasif" : "aktif";
@@ -46,7 +49,6 @@ const TeamScreen: React.FC = () => {
             try {
               await dispatch(updatePersonalStatusThunk(personalId)).unwrap();
               Alert.alert("Başarılı", `Personel ${actionText} yapıldı`);
-              // Listeyi yenile
               dispatch(getTeam());
             } catch (err: any) {
               Alert.alert("Hata", err || "Durum güncellenemedi");
@@ -59,9 +61,11 @@ const TeamScreen: React.FC = () => {
     );
   };
 
-  // Personel düzenleme
-  const handleEditPersonal = (personalId: number) => {
-    Alert.alert("Düzenle", "Düzenleme özelliği yakında eklenecek");
+  // ✅ DÜZELTME: PersonalCard'a gönderilen formattaki objeyi kullan
+  const handleEditPersonal = (personal: any) => {
+    console.log("🔍 handleEditPersonal - Gönderilen personal:", personal);
+    setSelectedPersonal(personal);
+    setEditModalVisible(true);
   };
 
   if (loading && !togglingId) {
@@ -80,25 +84,30 @@ const TeamScreen: React.FC = () => {
     );
   }
 
-  const renderItem = ({ item }: any) => (
-    <PersonalCard
-      personal={{
-        id: item.id,
-        image: item.image,
-        avatar: item.avatar,
-        name: item.name,
-        roles: item.roles,
-        email: item.contacts?.email,
-        city: item.city?.title,
-        company: item.company?.title,
-        contact: item.contacts,
-        is_active: item.is_active,
-      }}
-      onEdit={() => handleEditPersonal(item.id)}
-      onToggleStatus={() => handleToggleStatus(item.id, item.is_active)}
-      statusLoading={togglingId === item.id}
-    />
-  );
+  const renderItem = ({ item }: any) => {
+    // ✅ DÜZELTME: Formatlı objeyi değişkene al
+    const formattedPersonal = {
+      id: item.id,
+      image: item.image,
+      avatar: item.avatar,
+      name: item.name,
+      roles: item.roles,
+      email: item.contacts?.email,
+      city: item.city?.title,
+      company: item.company?.title,
+      contact: item.contacts,  // ← item.contacts → contact olarak gönderiliyor
+      is_active: item.is_active,
+    };
+
+    return (
+      <PersonalCard
+        personal={formattedPersonal}
+        onEdit={() => handleEditPersonal(formattedPersonal)}  // ← DÜZELTME: formattedPersonal gönder!
+        onToggleStatus={() => handleToggleStatus(item.id, item.is_active)}
+        statusLoading={togglingId === item.id}
+      />
+    );
+  };
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
@@ -144,6 +153,16 @@ const TeamScreen: React.FC = () => {
           isVisible={invitationModalVisible}
           onClose={() => setInvitationModalVisible(false)}
           onSuccess={handleInvitationSuccess}
+        />
+
+        <EditPersonalModal
+          isVisible={editModalVisible}
+          personal={selectedPersonal}
+          onClose={() => {
+            setEditModalVisible(false);
+            setSelectedPersonal(null);
+            dispatch(getTeam()); // ← Modal kapandığında listeyi yenile
+          }}
         />
       </View>
     </SafeAreaView>

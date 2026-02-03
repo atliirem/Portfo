@@ -33,7 +33,7 @@ const { width } = Dimensions.get("window");
 const IMAGE_SIZE = width * 0.28;
 const COVER_IMAGE_SIZE = width - 30;
 
-// Default placeholder image
+
 const DEFAULT_COVER_IMAGE = "https://via.placeholder.com/600x400/f5f5f5/999999?text=Fotoğraf+Ekleyin";
 
 type NavigationProps = NativeStackScreenProps<HomeStackParamList, "GalleryScreen">;
@@ -94,7 +94,7 @@ const GalleryScreen: React.FC<Props> = (props) => {
     }
   }, [property, dispatch]);
 
-  // Resim değişikliklerini parent'a bildir
+
   useEffect(() => {
     if (onImagesChange) {
       onImagesChange(hasImages, totalImageCount);

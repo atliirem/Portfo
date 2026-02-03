@@ -65,15 +65,11 @@ const changeCustomerAlert = (onConfirm: () => void) => {
     ]
   );
 };
-
-
-
   useFocusEffect(
     useCallback(() => {
       loadData();
     }, [])
   );
-
     useFocusEffect(
       useCallback(() => {
         const checkData = async () => {
@@ -91,7 +87,6 @@ const changeCustomerAlert = (onConfirm: () => void) => {
       console.log("Seçilen müşteri adı:", name);
     };
 
-  
 
   const loadData = async () => {
     setLoading(true);
@@ -126,7 +121,7 @@ const changeCustomerAlert = (onConfirm: () => void) => {
 
   const handleOpenSendModal = () => {
 
-  console.log("🏠 Properties:", JSON.stringify(properties, null, 2));
+  console.log(" Properties:", JSON.stringify(properties, null, 2));
 
 
     if (!customer) {
@@ -247,20 +242,17 @@ const changeCustomerAlert = (onConfirm: () => void) => {
         </View>
         <View>
           <ProfileButton
-          bg="#c4c4c4"
-          height={45}
-          width={125}
-          color="white"
-  label="Müşteriyi değiştir"
-  onPress={() =>
-    changeCustomerAlert(() => {
-      setCustomer(null);
-      setProperties([]);
-      clearAllOfferData();
-      navigation.goBack();
-    })
-  }
-/>
+            bg="#c4c4c4"
+            height={45}
+            width={125}
+            color="white"
+            label="Müşteriyi değiştir"
+            onPress={() => changeCustomerAlert(() => {
+              setCustomer(null);
+              setProperties([]);
+              clearAllOfferData();
+              navigation.goBack();
+            })} marginTop={0}/>
 
         </View>
       </View>
@@ -367,7 +359,7 @@ const changeCustomerAlert = (onConfirm: () => void) => {
         <SelectCustomerModal
         visible={customerModalVisible}
         onClose={() => setCustomerModalVisible(false)}
-        onSelect={handleCustomerSelect}
+       onSelect={handleCustomerSelect}
       />
     </View>
 

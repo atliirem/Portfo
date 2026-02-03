@@ -59,6 +59,7 @@ FullScreenGallery: {
 
   CompanyDetailScreen: {id: number}
   SelectedPropertiesScreen: undefined;
+   PropertiesScreenProfile: {id: number}
 };
 };
 
@@ -80,6 +81,13 @@ export default function HomeStack() {
        <Stack.Screen
         name="EditTaslak"
         component={EditTaslak}
+        options={{
+          header: () => <TopBar />,
+        }}
+      />
+             <Stack.Screen
+        name="PropertiesScreenProfile"
+        component={PropertiesScreen}
         options={{
           header: () => <TopBar />,
         }}

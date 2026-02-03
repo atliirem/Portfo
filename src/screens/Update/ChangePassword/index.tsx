@@ -21,7 +21,6 @@ import { AppDispatch, RootState } from "../../../redux/store";
 import { changePasswordThunk, verifyPasswordCodeThunk } from "../../../../api";
 import { clearPasswordChangeState } from "../../../redux/Slice/authSlice";
 
-
 type Props = NativeStackScreenProps<RootStackParamList, "ChangePassword">;
 
 const ChangePassword: React.FC<Props> = ({ navigation }) => {
@@ -48,7 +47,6 @@ const ChangePassword: React.FC<Props> = ({ navigation }) => {
     }
   }, [passwordChangeSuccess]);
 
-
   useEffect(() => {
     if (verifyCodeSuccess) {
       Alert.alert("Başarılı", "Şifreniz başarıyla değiştirildi.", [
@@ -68,7 +66,6 @@ const ChangePassword: React.FC<Props> = ({ navigation }) => {
     }
   }, [verifyCodeSuccess]);
 
-  // Doğrulama hatası
   useEffect(() => {
     if (verifyCodeError) {
       Alert.alert("Hata", verifyCodeError);
@@ -119,7 +116,7 @@ const ChangePassword: React.FC<Props> = ({ navigation }) => {
 
   const handleVerifyCode = () => {
     if (!verificationCode || verificationCode.length < 4) {
-      Alert.alert("Uyarı", "Lütfen doğrulama kodunu girin.");
+      Alert.alert("Uyarı","Lütfen doğrulama kodunu girin.");
       return;
     }
 
@@ -138,7 +135,7 @@ const ChangePassword: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor="#fff" />
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}

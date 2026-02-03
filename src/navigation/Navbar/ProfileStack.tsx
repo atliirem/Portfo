@@ -51,6 +51,8 @@ import EditCompany from "../../screens/Company/EditCompany";
 import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
 import { CustomerOffersDetail } from "../../screens/Detail/GetCustomerOffers";
 import InvitationsScreen from "../../components/Team/Invitations";
+import PushNewPassword from "../../screens/Update/LostPassword/PushNewPassword";
+import VerifyCode from "../../screens/Update/LostPassword/VerifyCode";
 
 
 
@@ -84,6 +86,9 @@ export type ProfileStackParamList = {
 
   EditProperty: { id: number };
   MySubscriptionsScreen: undefined;
+
+  PushNewPassword: undefined;
+  VerifyCode: undefined;
 
   SettingsScreen: undefined;
   SelectCustomerModal: undefined;
@@ -131,7 +136,22 @@ export default function ProfileStack() {
           header: () => <TopBar />, 
         }}
       /> 
-       
+      
+         <Stack.Screen
+        name="PushNewPassword"
+        component={PushNewPassword}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      /> 
+   
+        <Stack.Screen
+        name="VerifyCode"
+        component={VerifyCode}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      /> 
 
        <Stack.Screen
         name="EditTaslak"
@@ -152,8 +172,8 @@ export default function ProfileStack() {
         name="SelectedPropertiesScreen"
         component={SelectedPropertiesScreen}
         options={{
-          header: () => <TopBar />, 
-        }}
+          headerShown: false }}
+        
       />  
    
      <Stack.Screen
@@ -207,8 +227,6 @@ export default function ProfileStack() {
     presentation: 'fullScreenModal' 
   }}
 />
-
-
         <Stack.Screen
         name="OfffersDetail"
         component={OfffersDetail}
@@ -223,8 +241,6 @@ export default function ProfileStack() {
           header: () => <Top />, 
         }}
       />
-
-      
 
        <Stack.Screen
         name="CompanyLoc"
@@ -242,8 +258,6 @@ export default function ProfileStack() {
         }}
       />
 
-
-
 <Stack.Screen
         name="SelectCustomerModal"
         component={SelectCustomerModal}
@@ -251,8 +265,6 @@ export default function ProfileStack() {
           header: () => <Top />, 
         }}
       />
-
-
 
 <Stack.Screen
         name="InvitationsScreen"

@@ -1,5 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Login from "../../screens/Login"
+import VerifyCode from "../../screens/Update/LostPassword/VerifyCode";
+import PushNewPassword from "../../screens/Update/LostPassword/PushNewPassword";
 
 
 
@@ -14,6 +16,8 @@ const AuthStack=()=>{
 
 
         <Stack.Screen name="Login" component={Login}/>
+        <Stack.Screen name="VerifyCode" component={VerifyCode}/>
+        <Stack.Screen name="PushNewPassword" component={PushNewPassword}/>
     
        </Stack.Navigator>
         

@@ -43,7 +43,6 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
     ? avatarUrl.replace("format=svg", "format=png")
     : avatarUrl;
 
-
   const getInitials = (name: string) => {
     const words = name.trim().split(" ");
     if (words.length >= 2) {
@@ -56,7 +55,6 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
     if (!personal.roles || personal.roles.length === 0) return "";
     return personal.roles.map((r) => r.title).join(" ");
   };
-
 
   const formatPhone = () => {
     if (!personal.contact?.phone?.number) return null;
@@ -93,13 +91,16 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
     }
   };
 
+  const isGeneralManager = personal.roles?.some(
+    (role) => role.key === "chairmen" 
+  );
+
   const phoneNumber = formatPhone();
   const rolesText = getRolesText();
   const displayEmail = personal.contact?.email || personal.email;
 
   return (
     <View style={styles.card}>
-
       {finalAvatarUrl ? (
         <Image source={{ uri: finalAvatarUrl }} style={styles.avatar} />
       ) : (
@@ -108,13 +109,10 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
         </View>
       )}
 
-
       <Text style={styles.name}>{personal.name}</Text>
       {rolesText ? <Text style={styles.roles}>{rolesText}</Text> : null}
 
-
       <View style={styles.contactContainer}>
-      
         <TouchableOpacity
           style={styles.contactRow}
           onPress={handlePhonePress}
@@ -127,7 +125,6 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
           </Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity
           style={styles.contactRow}
           onPress={handleEmailPress}
@@ -137,7 +134,6 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
           <Text style={styles.separator}>|</Text>
           <Text style={styles.contactText}>{displayEmail || "Email yok"}</Text>
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={styles.contactRow}
@@ -149,23 +145,25 @@ const PersonalCard: React.FC<PersonalCardProps> = ({
         </TouchableOpacity>
       </View>
 
-
       {personal.company && (
         <Text style={styles.company}>{personal.company}</Text>
       )}
       {personal.city && <Text style={styles.city}>{personal.city}</Text>}
 
-
       <View style={styles.actionContainer}>
-        <TouchableOpacity style={styles.editButton} onPress={onEdit}>
-          <Ionicons name="create-outline" size={18} color="#666" />
-          <Text style={styles.editButtonText}>Düzenle</Text>
-        </TouchableOpacity>
+
+        {!isGeneralManager && (
+          <TouchableOpacity style={styles.editButton} onPress={onEdit}>
+            <Ionicons name="create-outline" size={18} color="#666" />
+            <Text style={styles.editButtonText}>Düzenle</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={[
             styles.statusButton,
             personal.is_active === false && styles.statusButtonActive,
+            isGeneralManager && styles.statusButtonFullWidth,
           ]}
           onPress={onToggleStatus}
           disabled={statusLoading}
@@ -211,7 +209,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 3,
-   
   },
   avatar: {
     width: 70,
@@ -304,6 +301,9 @@ const styles = StyleSheet.create({
   },
   statusButtonActive: {
     backgroundColor: "#22c55e",
+  },
+  statusButtonFullWidth: {
+
   },
   statusButtonText: {
     fontSize: 12,

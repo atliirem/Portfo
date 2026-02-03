@@ -44,7 +44,7 @@ export const AuthService = {
       const token = String(userData.token || "");
       
       if (!token) {
-        console.error("❌ AuthService.setUser: Token eksik!");
+        console.error(" AuthService.setUser: Token eksik!");
         return;
       }
 

@@ -98,7 +98,7 @@ const Index = () => {
           {error && <Text style={styles.error}>{String(error)}</Text>}
 
           <View style={styles.footer}>
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <TouchableOpacity onPress={() => navigation.navigate('VerifyCode' as never)}>
               <Text style={styles.footerLink}>Şifremi Unuttum</Text>
             </TouchableOpacity>
 

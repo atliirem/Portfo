@@ -696,3 +696,4 @@ export const {
 } = companySlice.actions;
 
 export default companySlice.reducer;
+
