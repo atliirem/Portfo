@@ -105,6 +105,3 @@ function addLocalImage(arg0: { category: string; uri: any; }): any {
 }
 
 
-
-// buradaki durum da şu şimdi eğer ilana fotoğraf yüklenmediyse default image var o gözüküyor. ama kapak fotoğrafı olarak 1 foto konduğu için sonra fotoğraf düzenlemeye çalıştığımda kapak fotoğraftan default image silinmiyor. bu sebeple 
-// o yüzden kapak fotoğrafa basınca güncelle  ve görüntüle seçenekleri olan bir modal Koy. kapak fotoğrafı ilk başta olsun o en büyük olsun tek foto yüklenecek şekilde altında feature'lara göre gelen anlardakini çarpı işareti ile silebiliriz. 
