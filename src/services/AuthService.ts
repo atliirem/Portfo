@@ -76,8 +76,8 @@ export const AuthService = {
       const user = await AsyncStorage.getItem(KEYS.USER);
       
       console.log(" AuthService Debug:");
-      console.log("  - Token:", token ? "✓ Var" : " Yok");
-      console.log("  - User:", user ? JSON.parse(user).email : "✗ Yok");
+      console.log("  - Token:", token ? " Var" : " Yok");
+      console.log("  - User:", user ? JSON.parse(user).email : " Yok");
     } catch (error) {
       console.error(" AuthService.debugStorage error:", error);
     }
