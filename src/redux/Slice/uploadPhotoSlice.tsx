@@ -55,7 +55,7 @@ export const uploadGalleryImage = createAsyncThunk(
 
       formData.append("category_id", String(categoryId));
 
-      console.log("📤 Upload - Property:", propertyId, "Category:", categoryId);
+      console.log("Upload - Property:", propertyId, "Category:", categoryId);
 
       const res = await api.post(
         `/properties/${propertyId}/galleries/upload`,
@@ -63,7 +63,7 @@ export const uploadGalleryImage = createAsyncThunk(
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      console.log("📤 Upload response:", res.data);
+      console.log("Upload response:", res.data);
 
       if (res.data.status === "success") {
         return {
@@ -74,7 +74,7 @@ export const uploadGalleryImage = createAsyncThunk(
 
       return rejectWithValue(res.data.message || "Yüklenemedi");
     } catch (error: any) {
-      console.error("📤 Upload error:", error?.response?.data);
+      console.error("Upload error:", error?.response?.data);
       return rejectWithValue(error?.response?.data?.message || "Yüklenemedi");
     }
   }
@@ -98,7 +98,7 @@ export const uploadCoverImage = createAsyncThunk(
         type: fileType,
       } as any);
 
-      console.log("📤 Cover Upload - Property:", propertyId);
+      console.log("Cover Upload - Property:", propertyId);
 
       const res = await api.post(
         `/properties/${propertyId}/galleries/cover/upload`,
@@ -116,7 +116,7 @@ export const uploadCoverImage = createAsyncThunk(
 
       return rejectWithValue(res.data.message || "Kapak fotoğrafı yüklenemedi");
     } catch (error: any) {
-      console.error("📤 Cover Upload error:", error?.response?.data);
+      console.error("Cover Upload error:", error?.response?.data);
       return rejectWithValue(error?.response?.data?.message || "Kapak fotoğrafı yüklenemedi");
     }
   }
@@ -130,13 +130,13 @@ export const deleteGalleryImage = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log("🗑️ Delete - Property:", propertyId, "Image:", imageId);
+      console.log("Delete - Property:", propertyId, "Image:", imageId);
 
       const res = await api.post(`/properties/${propertyId}/galleries/delete`, {
         image_id: imageId,
       });
 
-      console.log("🗑️ Delete response:", res.data);
+      console.log("Delete response:", res.data);
 
       if (res.data.status === "success") {
         return { imageId };
@@ -144,7 +144,7 @@ export const deleteGalleryImage = createAsyncThunk(
 
       return rejectWithValue(res.data.message || "Silinemedi");
     } catch (error: any) {
-      console.error("🗑️ Delete error:", error?.response?.data);
+      console.error("Delete error:", error?.response?.data);
       return rejectWithValue(error?.response?.data?.message || "Silinemedi");
     }
   }
