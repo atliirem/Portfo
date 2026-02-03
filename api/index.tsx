@@ -57,8 +57,6 @@ export const signUpThunk = createAsyncThunk(
         'Kayıt başarısız';
       return rejectWithValue(msg);
     }
-  }
-);
 
 interface LoginParams {
   email: string;
@@ -276,7 +274,7 @@ export const getPropertyFeatures = createAsyncThunk(
       let propertyId = params.propertyId;
       const isCreateMode = !propertyId && params.propertyTypeId;
 
-      // ✅ CREATE MODE: Template property'den al
+
       if (isCreateMode) {
         console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
         
@@ -300,7 +298,7 @@ export const getPropertyFeatures = createAsyncThunk(
 
       let features = res.data.data.features;
 
-      // ✅ CREATE MODE: Values'ları temizle
+     
       if (isCreateMode) {
         console.log('🧹 Template values temizleniyor...');
         features = clearFeatureValues(features);

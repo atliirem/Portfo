@@ -75,6 +75,7 @@
 //       const token = await AsyncStorage.getItem(KEYS.TOKEN);
 //       const user = await AsyncStorage.getItem(KEYS.USER);
       
+<<<<<<< HEAD
 //       console.log(" AuthService Debug:");
 //       console.log("  - Token:", token ? "✓ Var" : " Yok");
 //       console.log("  - User:", user ? JSON.parse(user).email : "✗ Yok");
@@ -83,3 +84,13 @@
 //     }
 //   }
 // };
+=======
+      console.log(" AuthService Debug:");
+      console.log("  - Token:", token ? " Var" : " Yok");
+      console.log("  - User:", user ? JSON.parse(user).email : " Yok");
+    } catch (error) {
+      console.error(" AuthService.debugStorage error:", error);
+    }
+  }
+};
+>>>>>>> b8eb7fb40045d470698716348d31a76a1daa182f
