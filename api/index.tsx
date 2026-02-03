@@ -266,7 +266,7 @@ export const getPropertyFeatures = createAsyncThunk(
       let propertyId = params.propertyId;
       const isCreateMode = !propertyId && params.propertyTypeId;
 
-      // ✅ CREATE MODE: Template property'den al
+
       if (isCreateMode) {
         console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
         
