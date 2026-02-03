@@ -73,7 +73,7 @@ export const loginThunk = createAsyncThunk<
 
     const userData = { ...user, token };
 
-    // ✅ kalıcı: reload'ta çıkış yapmasın
+
     await AsyncStorage.setItem("@TOKEN", String(token));
     await AsyncStorage.setItem("@USER", JSON.stringify(userData));
 
@@ -290,7 +290,7 @@ export const getPropertyFeatures = createAsyncThunk(
 
       let features = res.data.data.features;
 
-      // ✅ CREATE MODE: Values'ları temizle
+     
       if (isCreateMode) {
         console.log('🧹 Template values temizleniyor...');
         features = clearFeatureValues(features);
