@@ -16,7 +16,7 @@ import { RootStackParamList } from "../../navigation/RootStack";
 
 interface CustomerCardProps {
   customer: {
-    id: number;
+    id: string;
     name: string;
     email?: string;
     phone?: {
@@ -68,7 +68,7 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
           <Text style={styles.name}>{customer.name}</Text>
 
 <View style={styles.row}>
-  <Text style={styles.textInfo} >Telefon Numarası : </Text>
+  <Text style={styles.textInfo} >Telefon Numarası:</Text>
           <Text style={styles.value}>
             {customer.phone
               ? `+${customer.phone.code} ${customer.phone.number}`
@@ -77,9 +77,8 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
           </View>
 
                 <View style={styles.row} >
-              <Text style={styles.textInfo}>E-posta : </Text>
-          <Text style={styles.value}>
-            {customer.email ?? "E-posta yok"}
+              <Text style={styles.textInfo}>E-posta:</Text>
+          <Text style={styles.value}>{customer.email ??"E-posta yok"}
           </Text>
           </View>
         </View>
@@ -99,7 +98,7 @@ const CustomerCard: React.FC<CustomerCardProps> = ({
             onPress={handleDelete}
             activeOpacity={0.8}
           >
-            <Ionicons name="trash" size={15} color="#fff" />
+            <Ionicons name="trash" size={16} color="#fff" />
           </TouchableOpacity>
           </View>
         
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
     color: "#c2c2c2",
     marginRight: 6,
   },
-   rowButtons: { flexDirection: "row", marginBottom: 6, justifyContent: 'space-evenly', marginLeft: 2 },
+   rowButtons: { flexDirection: "row", marginBottom: 6, justifyContent: 'center', marginLeft: 2 },
    textInfo: {
     fontWeight: '800',
     fontSize: 11.8,

@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
   iconBtn: {
     marginLeft: 8,
     padding: 4,
+   
   },
   errorBorder: {
     borderColor: "#FF4444",

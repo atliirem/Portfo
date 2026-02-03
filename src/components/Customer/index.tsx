@@ -78,7 +78,7 @@ const CustomerScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#00A7C0" />
+        <ActivityIndicator size={'small'} color="#00A7C0" />
       </View>
     );
   }

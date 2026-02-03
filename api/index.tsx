@@ -1,93 +1,103 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-
 import { RootState } from '../src/redux/store';
-
-
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const AUTH_KEY = "@AUTH";
 
 export const api = axios.create({
   baseURL: "https://portfoy.demo.pigasoft.com/api",
   headers: { Accept: "application/json" },
 });
 
+
 api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem("@TOKEN");
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
+  try {
+    const authData = await AsyncStorage.getItem(AUTH_KEY);
+    if (authData) {
+      const { token } = JSON.parse(authData);
+      if (token) {
+        config.headers = config.headers ?? {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (error) {
+    console.error("Token okuma hatası:", error);
   }
   return config;
 });
 
+interface SignUpParams {
+  email: string;
+  password: string;
+  name: string;
+  invitation_code: string;
+}
 
-export const signUpThunk = createAsyncThunk<
-  any,
-  { email: string; password: string; name: string; invitation_code: string }
->('auth/register', async ({ email, password, name, invitation_code }) => {
-  try {
-    const res = await api.post('/auth/register', {
-      email,
-      password,
-      name,
-      invitation_code,
-    });
+export const signUpThunk = createAsyncThunk(
+  'auth/register',
+  async (params: SignUpParams, { rejectWithValue }) => {
+    try {
+      const res = await api.post('/auth/register', {
+        email: params.email,
+        password: params.password,
+        name: params.name,
+        invitation_code: params.invitation_code,
+      });
 
-    const { token, user } = res.data.data;
-    const userData = { ...user, token };
+      const { token, user } = res.data.data;
+      const userData = { ...user, token };
 
-    await AsyncStorage.setItem('@TOKEN', String(token || ''));
-    await AsyncStorage.setItem('@USER', JSON.stringify(userData));
-
-    return userData;
-  } catch (err: any) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.errors?.email?.[0] ||
-      err?.message ||
-      'Kayıt başarısız';
-    throw new Error(msg);
-  }
-});
-
-
-export const loginThunk = createAsyncThunk<
-  any,
-  { email: string; password: string }
->("auth/login", async ({ email, password }, { rejectWithValue }) => {
-  try {
-    const res = await api.post("/auth/login", {
-      email,
-      password,
-      locale: "tr",
-    });
-
-    if (res.data?.status === "error") {
-      return rejectWithValue(res.data?.message || "Giriş başarısız");
+      return userData;
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors?.email?.[0] ||
+        err?.message ||
+        'Kayıt başarısız';
+      return rejectWithValue(msg);
     }
-
-    const token = res.data?.data?.token;
-    const user = res.data?.data?.user || res.data?.data;
-
-    if (!token) return rejectWithValue("Sunucudan token alınamadı");
-
-    const userData = { ...user, token };
-
-    // ✅ kalıcı: reload'ta çıkış yapmasın
-    await AsyncStorage.setItem("@TOKEN", String(token));
-    await AsyncStorage.setItem("@USER", JSON.stringify(userData));
-
-    return userData;
-  } catch (err: any) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.message ||
-      "Giriş başarısız";
-    return rejectWithValue(msg);
   }
-});
+);
 
+interface LoginParams {
+  email: string;
+  password: string;
+}
 
+export const loginThunk = createAsyncThunk(
+  "auth/login",
+  async (params: LoginParams, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/auth/login", {
+        email: params.email,
+        password: params.password,
+        locale: "tr",
+      });
+
+      if (res.data?.status === "error") {
+        return rejectWithValue(res.data?.message || "Giriş başarısız");
+      }
+
+      const token = res.data?.data?.token;
+      const user = res.data?.data?.user || res.data?.data;
+
+      if (!token) {
+        return rejectWithValue("Sunucudan token alınamadı");
+      }
+
+      const userData = { ...user, token };
+
+      return userData;
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Giriş başarısız";
+      return rejectWithValue(msg);
+    }
+  }
+);
 
 interface ChangePasswordParams {
   current: string;
