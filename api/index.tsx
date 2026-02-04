@@ -254,10 +254,9 @@ export const getPropertyFeatures = createAsyncThunk(
 
 
       if (isCreateMode) {
-        console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
+        console.log('Create mode, typeId:', params.propertyTypeId);
         
-        // Template ID'yi al
-        const templateId = TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
+        const templateId =  TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
         
         if (!templateId) {
           throw new Error(`${params.propertyTypeId} tipi için şablon bulunamadı`);
@@ -265,7 +264,7 @@ export const getPropertyFeatures = createAsyncThunk(
         
         propertyId = templateId;
       } else {
-        console.log('✏️ Edit mode - Property details çekiliyor, propertyId:', propertyId);
+        console.log(' Edit mode - Property details çekiliyor, propertyId:', propertyId);
       }
 
       const res = await api.get(`/properties/${propertyId}/details`);
@@ -334,8 +333,6 @@ function clearFeatureValues(groups: any[]): any[] {
     })
   }));
 }
-
-// api.ts veya ilgili thunk dosyanızda
  export const getNotifications = createAsyncThunk('/notifications/getNotifications', async (id: number) => {
    const res = await api.get(`/auth/notifications`);
   return res.data.data;
@@ -715,7 +712,7 @@ export const replyToOffer = createAsyncThunk(
   async ({ id, type }: { id: number; type: "confirm" | "reject" }, { rejectWithValue }) => {
     try {
       const res = await api.post(`/offers/${id}/reply`, { type });
-      return res.data; // message + phone
+      return res.data; 
     } catch {
       return rejectWithValue("Teklif yanıtlanamadı");
     }
