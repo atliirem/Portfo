@@ -1,97 +1,78 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 import { RootState } from '../src/redux/store';
 
 
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const api = axios.create({
-  baseURL: 'https://portfoy.demo.pigasoft.com/api',
-  headers: {
-    Accept: 'application/json',
-   
-  },
+export const api = axios.create({
+  baseURL: "https://portfoy.demo.pigasoft.com/api",
+  headers: { Accept: "application/json" },
 });
 
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('@TOKEN');
 
-  if (token && typeof token === 'string') {
+api.interceptors.request.use(async (config) => {
+  const token = await AsyncStorage.getItem("@TOKEN");
+  if (token) {
+    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
-export const signUpThunk = createAsyncThunk<
-  any,
-  { email: string; password: string; name: string; invitation_code: string }
->('auth/register', async ({ email, password, name, invitation_code }) => {
-  try {
-    const res = await api.post('/auth/register', {
+export const signUpThunk = createAsyncThunk(
+  "auth/register",
+  async (
+    {
       email,
       password,
       name,
       invitation_code,
-    });
+    }: { email: string; password: string; name: string; invitation_code: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await api.post("/auth/register", {
+        email,
+        password,
+        name,
+        invitation_code,
+      });
 
-    const { token, user } = res.data.data;
-    const userData = { ...user, token };
+      const { token, user } = res.data.data;
+      const userData = { ...user, token };
 
-    await AsyncStorage.setItem('@TOKEN', String(token || ''));
-    await AsyncStorage.setItem('@USER', JSON.stringify(userData));
+      await AsyncStorage.setItem("@TOKEN", token);
+      await AsyncStorage.setItem("@USER", JSON.stringify(userData));
 
-    return userData;
-  } catch (err: any) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.errors?.email?.[0] ||
-      err?.message ||
-      'Kayıt başarısız';
-    throw new Error(msg);
-  }
-});
-
-
-
-export const loginThunk = createAsyncThunk<
-  any,
-  { email: string; password: string }
->('auth/login', async ({ email, password }) => {
-  try {
-    const res = await api.post('/auth/login', {
-      email,
-      password,
-      locale: 'tr',
-    });
-
-    if (res.data.status === 'error') {
-      throw new Error(res.data.message || 'Giriş başarısız');
+      return userData;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || "Kayıt başarısız");
     }
-
-    const token = res.data.data?.token;
-    const user = res.data.data?.user || res.data.data;
-
-    if (!token) {
-      throw new Error('Sunucudan token alınamadı');
-    }
-
-    const userData = { ...user, token };
-
-    await AsyncStorage.setItem('@TOKEN', token);
-    await AsyncStorage.setItem('@USER', JSON.stringify(userData));
-
-  
-    return userData;
-  } catch (err: any) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.message ||
-      'Giriş başarısız';
-    throw new Error(msg);
   }
-});
+);
 
+export const loginThunk = createAsyncThunk(
+  "auth/login",
+  async (
+    { email, password }: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await api.post("/auth/login", { email, password, locale: "tr" });
+
+      const { token, user } = res.data.data;
+      const userData = { ...user, token };
+
+      await AsyncStorage.setItem("@TOKEN", token);
+      await AsyncStorage.setItem("@USER", JSON.stringify(userData));
+
+      return userData;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || "Giriş başarısız");
+    }
+  }
+);
 
 
 interface ChangePasswordParams {
@@ -126,6 +107,8 @@ export const changePasswordThunk = createAsyncThunk(
 
 interface VerifyPasswordCodeParams {
   code: string;
+  email: string;
+  locale: "tr";
 }
 
 export const verifyPasswordCodeThunk = createAsyncThunk(
@@ -149,6 +132,29 @@ export const verifyPasswordCodeThunk = createAsyncThunk(
   }
 );
 
+
+
+export const getCustomerProposals = createAsyncThunk(
+  "auth/getCustomerProposals",
+  async (params: { customer_id: string }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("customer_id", params.customer_id);
+
+      const res = await api.post("/auth/company/proposals", formData);
+
+      if (res.data.status !== "success") {
+        throw new Error(res.data.message || "İşlem başarısız");
+      }
+
+      return res.data;
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message || err.message || "İşlem başarısız";
+      return rejectWithValue(message);
+    }
+  }
+);
 
 export const logoutThunk = createAsyncThunk(
   "auth/logout",
@@ -194,6 +200,7 @@ export const getProperties = createAsyncThunk(
 
 
 
+
 export const getAllProperties = createAsyncThunk(
   "properties/getAllProperties",
   async (_, { rejectWithValue }) => {
@@ -214,19 +221,73 @@ export const getAllProperties = createAsyncThunk(
   }
 );
 
+// export const getPropertyFeatures = createAsyncThunk(
+//   "features/getPropertyFeatures",
+//   async (id: number, { rejectWithValue }) => {
+//     try {
+//       const res = await api.get(`/properties/${id}/details`);
+//       if (res.data.status !== "success") {
+//         throw new Error(res.data.message || "Bilgi alınamadı");
+//       }
+
+//       return res.data.data.features;
+//     } catch (err: any) {
+//       const msg =
+//         err?.response?.data?.message ||
+//         err?.message ||
+//         "Bilgi alınamadı";
+//       return rejectWithValue(msg);
+//     }
+//   }
+// );
 
 
 export const getPropertyFeatures = createAsyncThunk(
   "features/getPropertyFeatures",
-  async (id: number, { rejectWithValue }) => {
+  async (
+    params: { propertyId?: number; propertyTypeId?: number },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await api.get(`/properties/${id}/details`);
+      let propertyId = params.propertyId;
+      const isCreateMode = !propertyId && params.propertyTypeId;
+
+
+      if (isCreateMode) {
+        console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
+        
+        // Template ID'yi al
+        const templateId = TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
+        
+        if (!templateId) {
+          throw new Error(`${params.propertyTypeId} tipi için şablon bulunamadı`);
+        }
+        
+        propertyId = templateId;
+      } else {
+        console.log('✏️ Edit mode - Property details çekiliyor, propertyId:', propertyId);
+      }
+
+      const res = await api.get(`/properties/${propertyId}/details`);
+      
       if (res.data.status !== "success") {
         throw new Error(res.data.message || "Bilgi alınamadı");
       }
 
-      return res.data.data.features;
+      let features = res.data.data.features;
+
+     
+      if (isCreateMode) {
+        console.log('🧹 Template values temizleniyor...');
+        features = clearFeatureValues(features);
+      }
+
+      return features;
     } catch (err: any) {
+      console.error(' Features alınamadı:', {
+        error: err?.response?.data || err.message
+      });
+      
       const msg =
         err?.response?.data?.message ||
         err?.message ||
@@ -235,7 +296,46 @@ export const getPropertyFeatures = createAsyncThunk(
     }
   }
 );
+function clearFeatureValues(groups: any[]): any[] {
+  return groups.map(group => ({
+    ...group,
+    features: group.features.map((feature: any) => {
+      const isMultiple = feature.details?.multiple === true || 
+                        feature.details?.multiple === "true";
+      
 
+      let clearedValue;
+      
+      if (feature.input_type === "checkbox") {
+        clearedValue = false;
+      } else if (feature.input_type === "select") {
+   
+        clearedValue = isMultiple ? [] : null;
+        
+      
+        if (feature.options) {
+          feature.options = feature.options.map((opt: any) => ({
+            ...opt,
+            selected: false
+          }));
+        }
+      } else if (feature.input_type === "number") {
+        clearedValue = "";
+      } else if (feature.input_type === "file") {
+        clearedValue = isMultiple ? [] : null;
+      } else {
+        clearedValue = "";
+      }
+
+      return {
+        ...feature,
+        value: clearedValue
+      };
+    })
+  }));
+}
+
+// api.ts veya ilgili thunk dosyanızda
  export const getNotifications = createAsyncThunk('/notifications/getNotifications', async (id: number) => {
    const res = await api.get(`/auth/notifications`);
   return res.data.data;
@@ -472,7 +572,7 @@ export const updateProfile = createAsyncThunk<any, UpdateProfileArgs, ThunkConfi
   }
 );
 
-// api dosyanda ekle:
+
 type UpdatePropertyLocationArgs = {
   propertyId: number;
   latitude: number;
@@ -1132,7 +1232,6 @@ export const getCreatePriceOffer = createAsyncThunk(
   }
 );
 
-  // müşteri seç
 
 export const updateCustomer = createAsyncThunk(
   "customer/updateCustomer",
@@ -1141,23 +1240,53 @@ export const updateCustomer = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+      // FormData formatında gönder (EditPersonalModal gibi)
+      const formData = new FormData();
+      
+      if (body.name) formData.append("name", body.name);
+      if (body.email) formData.append("email", body.email);
+      
+      // Telefon - obje formatında geliyorsa
+      if (body.phone) {
+        if (typeof body.phone === "object") {
+          formData.append("phone", body.phone.number);
+          formData.append("phone_code", body.phone.code);
+        } else {
+          formData.append("phone", body.phone);
+        }
+      }
+
+      formData.append("locale", body.locale || "tr");
+
       const res = await api.post(
         `/auth/company/customers/${id}/update`,
-        body
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-     
-      return { id, data: res.data.data };
+      console.log("API Response:", res.data);
+
+      if (res.data.status === "success") {
+        return { id, data: res.data.data };
+      }
+
+      return rejectWithValue(res.data.message || "Müşteri güncellenemedi");
     } catch (err: any) {
+      console.error("updateCustomer error:", err.response?.data || err);
+      
       const msg =
         err?.response?.data?.errors?.body?.[0] ||
+        err?.response?.data?.message ||
         err?.message ||
         "Müşteri güncellenemedi";
       return rejectWithValue(msg);
     }
   }
 );
-
 export const getAllSubsrictions = createAsyncThunk(
   'allSubsrictions/getAllSubsrictions',
   async (_, { rejectWithValue }) => {
@@ -1446,7 +1575,7 @@ export const getFilteredProperties = createAsyncThunk(
       const { selectedDistrict } = state.district;
       const { selectedStreet } = state.streets;
       const { minPrice, maxPrice } = state.price;
-      const { selectedCurrencyId } = state.currencies;  // <-- ekle
+      const { selectedCurrencyId } = state.currencies;  
       const { query } = state.search;
 
       const formData = new FormData();
@@ -1465,13 +1594,13 @@ export const getFilteredProperties = createAsyncThunk(
       if (selectedDistrict) formData.append("district_id", selectedDistrict);
       if (selectedStreet) formData.append("street_id", selectedStreet);
 
-      // Fiyat filtreleri
+  
       if (minPrice) formData.append("min_sell_price", minPrice);
       if (maxPrice) formData.append("max_sell_price", maxPrice);
-      if (selectedCurrencyId) formData.append("currency_id", String(selectedCurrencyId));  // <-- ekle
+      if (selectedCurrencyId) formData.append("currency_id", String(selectedCurrencyId)); 
 
-      // Debug
-      console.log("🔍 Fiyat filtreleri:", { minPrice, maxPrice, selectedCurrencyId });
+     
+      console.log("Fiyat filtreleri:", { minPrice, maxPrice, selectedCurrencyId });
 
       const res = await api.post("/properties", formData, {
         headers: {
@@ -1567,8 +1696,6 @@ export const createProposal = createAsyncThunk(
     }
   }
 );
-
-
 
 export type CompanyUpdateArgs = {
   company_name: string;
@@ -1674,6 +1801,39 @@ export const uploadCompanyLogoThunk = createAsyncThunk<
 });
 
 
+export const uploadCoverImage = createAsyncThunk(
+  "gallery/uploadCoverImage",
+  async (
+    { propertyId, asset }: { propertyId: number; asset: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("cover", {
+        uri: asset.uri,
+        type: asset.type || "image/jpeg",
+        name: asset.fileName || `cover_${Date.now()}.jpg`,
+      });
+
+      const response = await api.post(
+        `/properties/${propertyId}/galleries/cover/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Kapak fotoğrafı yüklenemedi"
+      );
+    }
+  }
+);
+
 export const getProposalDetail = createAsyncThunk(
   "proposals/getProposalDetail",
   async (id: number, { rejectWithValue }) => {
@@ -1697,6 +1857,7 @@ interface ContactFormParams {
   name: string;
   email: string;
   phone: string;
+  phone_code: string;
   subject: string;
   message: string;
   locale?: string;
@@ -1724,6 +1885,349 @@ export const sendContactFormThunk = createAsyncThunk(
       const message =
         err.response?.data?.message || err.message || "Mesaj gönderilemedi";
       return rejectWithValue(message);
+    }
+  }
+);
+
+export type CreateCustomerParams = {
+  name: string;
+  email?: string;
+  phone?: string;
+  phone_code?: string;
+  locale?: string; 
+};
+
+export type CreateCustomerData = {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  phone_code?: string;
+  locale?: string;
+};
+
+export type CreateCustomerResponse = {
+  status: "success" | "error";
+  message: string;
+  data: CreateCustomerData;
+  locale?: string;
+};
+
+const getErrorMessage = (err: any, fallback: string) =>
+  err?.response?.data?.message || err?.message || fallback;
+
+export const createCustomerThunk = createAsyncThunk<
+  CreateCustomerResponse,
+  CreateCustomerParams,
+  { rejectValue: string }
+>("customers/create", async (params, { rejectWithValue }) => {
+  try {
+    const payload = {
+      name: params.name.trim(),
+      email: params.email?.trim() || undefined,
+      phone: params.phone?.trim() || undefined,
+      phone_code: params.phone_code?.trim() || undefined,
+      locale: params.locale ?? "tr",
+    };
+
+    const { data } = await api.post<CreateCustomerResponse>(
+      "/auth/company/customers/create",
+      payload
+    );
+
+    if (data.status !== "success") {
+      return rejectWithValue(data.message || "Müşteri oluşturulamadı");
+    }
+
+    return data;
+  } catch (err: any) {
+    return rejectWithValue(getErrorMessage(err, "Müşteri oluşturulamadı"));
+  }
+});
+
+export const createInvitationThunk = createAsyncThunk(
+  "company/createInvitation",
+  async (
+    payload: {
+      name: string;
+      email?: string;
+      phone?: string;
+      phone_code?: string;
+      role?: string;
+      locale?: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      
+      formData.append("name", payload.name);
+      if (payload.email) formData.append("email", payload.email);
+      if (payload.phone) formData.append("phone", payload.phone);
+      if (payload.phone_code) formData.append("phone_code", payload.phone_code);
+      if (payload.role) formData.append("role", payload.role);
+      formData.append("locale", payload.locale || "tr");
+
+      const response = await api.post(
+        "/auth/company/team/invitations/create",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (response.data.status === "success") {
+        return response.data;
+      }
+
+      return rejectWithValue(response.data.message || "Davetiye oluşturulamadı");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Davetiye oluşturulamadı"
+      );
+    }
+  }
+);
+
+export const getInvitationsThunk = createAsyncThunk(
+  "company/getInvitations",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/auth/company/team/invitations");
+
+      if (response.data.status === "success") {
+        return response.data.data.invitations || [];
+      }
+
+      return rejectWithValue(response.data.message || "Davetiyeler alınamadı");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Davetiyeler alınamadı"
+      );
+    }
+  }
+);
+
+export const updateInvitationThunk = createAsyncThunk(
+  "company/updateInvitation",
+  async (
+    {
+      invitationId,
+      data,
+    }: {
+      invitationId: number;
+      data: {
+        name: string;
+        email: string;
+        role: string;
+        locale: string;
+        phone: string;
+        phone_code: string;
+      };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      
+      formData.append("name", data.name);
+      if (data.email) formData.append("email", data.email);
+      if (data.phone) formData.append("phone", data.phone);
+      if (data.phone_code) formData.append("phone_code", data.phone_code);
+      if (data.role) formData.append("role", data.role);
+      formData.append("locale", data.locale || "tr");
+
+      const response = await api.post(
+        `/auth/company/team/invitations/${invitationId}/update`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (response.data.status === "success") {
+        return { invitationId, data: response.data };
+      }
+
+      return rejectWithValue(response.data.message || "Davetiye güncellenemedi");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Davetiye güncellenemedi"
+      );
+    }
+  }
+);
+
+export const deleteInvitationThunk = createAsyncThunk(
+  "company/deleteInvitation",
+  async (invitationId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.post(
+        `/auth/company/team/invitations/${invitationId}/delete`
+      );
+
+      if (response.data.status === "success") {
+        return { invitationId };
+      }
+
+      return rejectWithValue(response.data.message || "Davetiye silinemedi");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Davetiye silinemedi"
+      );
+    }
+  }
+);
+
+export const getPersonalPermissionsThunk = createAsyncThunk(
+  "company/getPersonalPermissions",
+  async (personalId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(
+        `/auth/company/team/${personalId}/permissions`
+      );
+
+      if (response.data.status === "success") {
+        return response.data.data || [];
+      }
+
+      return rejectWithValue(response.data.message || "Yetkiler alınamadı");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Yetkiler alınamadı"
+      );
+    }
+  }
+);
+
+export const updatePersonalPermissionsThunk = createAsyncThunk(
+  "company/updatePersonalPermissions",
+  async (
+    {
+      personalId,
+      permissions,
+    }: {
+      personalId: number;
+      permissions: string[];
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      
+ 
+      permissions.forEach((permKey) => {
+        formData.append(permKey, "1");
+      });
+
+      const response = await api.post(
+        `/auth/company/team/${personalId}/permissions/update`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (response.data.status === "success") {
+        return { personalId, permissions };
+      }
+
+      return rejectWithValue(response.data.message || "Yetkiler güncellenemedi");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Yetkiler güncellenemedi"
+      );
+    }
+  }
+);
+export const updatePersonalStatusThunk = createAsyncThunk(
+  "company/updatePersonalStatus",
+  async (personalId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.post(
+        `/auth/company/team/${personalId}/status/toggle`
+      );
+
+      if (response.data.status === "success") {
+        const newStatus = response.data.data?.personal_status;
+        return { personalId, is_active: newStatus };
+      }
+
+      return rejectWithValue(response.data.message || "Durum değiştirilemedi");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Durum değiştirilemedi"
+      );
+    }
+  }
+);
+export const updatePersonalProfileThunk = createAsyncThunk(
+  "company/updatePersonalProfile",
+  async (
+    {
+      personalId,
+      data,
+    }: {
+      personalId: number;
+      data: {
+        name: string;
+        phone?: string;
+        phone_code?: string;
+        role?: string; // role key (örn: "manager", "chairmen")
+        locale?: string;
+      };
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      
+      formData.append("name", data.name);
+      if (data.phone) formData.append("phone", data.phone);
+      if (data.phone_code) formData.append("phone_code", data.phone_code);
+      if (data.role) formData.append("role", data.role);
+      formData.append("locale", data.locale || "tr");
+
+      const response = await api.post(
+        `/auth/company/team/${personalId}/profile/update`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (response.data.status === "success") {
+        return { personalId, data: response.data.data };
+      }
+
+      return rejectWithValue(response.data.message || "Profil güncellenemedi");
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Profil güncellenemedi"
+      );
+    }
+  }
+);
+
+export const getRolesThunk = createAsyncThunk(
+  "company/getRoles",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("getRolesThunk başladı");
+      
+      const formData = new FormData();
+      formData.append("locale", "tr");
+      
+      const response = await api.post(`/front/roles`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      console.log("API Response:", response.data);
+
+      if (response.data.status === "success") {
+        console.log("Roller başarıyla alındı:", response.data.data);
+        return response.data.data;
+      }
+
+      console.log("API error:", response.data.message);
+      return rejectWithValue(response.data.message || "Roller alınamadı");
+    } catch (error: any) {
+      console.log("Catch error:", error.response?.data || error.message);
+      return rejectWithValue(
+        error.response?.data?.message || "Roller alınamadı"
+      );
     }
   }
 );
