@@ -1,35 +1,22 @@
 import React, { useEffect } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../redux/store";
 import { AuthService } from "../services/AuthService";
-
-import { AppDispatch, RootState } from "../redux/store";
 import { setUserFromStorage } from "../redux/Slice/authSlice";
+
+
 
 export default function Appk({ children }: any) {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, token } = useSelector((state: RootState) => state.auth);
   const [isInitializing, setIsInitializing] = React.useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const storedUser = await AuthService.getUser();
-        
-        if (storedUser) {
-          console.log("Stored user found:", storedUser.email);
-          dispatch(setUserFromStorage(storedUser));
-        } else {
-          console.log("No stored user found");
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initializeAuth();
+    AuthService.getUser()
+      .then((storedUser) => {
+        dispatch(setUserFromStorage(storedUser));
+      })
+      .finally(() => setIsInitializing(false));
   }, [dispatch]);
 
   if (isInitializing) {

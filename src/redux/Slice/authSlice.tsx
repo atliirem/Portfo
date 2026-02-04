@@ -252,7 +252,7 @@ export const {
   clearForgetPushState,
   clearPasswordChangeState,
   clearAuth,
-  setUserFromStorage, // ✅ EKLENDİ: dışarı export et
+  setUserFromStorage, 
 } = authSlice.actions;
 
 export default authSlice.reducer;

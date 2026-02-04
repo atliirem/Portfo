@@ -4,6 +4,7 @@ import { RootState } from '../src/redux/store';
 
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthService } from '../src/services/AuthService';
 
 export const api = axios.create({
   baseURL: "https://portfoy.demo.pigasoft.com/api",
@@ -94,7 +95,36 @@ export const loginThunk = createAsyncThunk<
   }
 });
 
+// export const loginThunk = createAsyncThunk(
+//   "auth/login",
+//   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+//     try {
+//       const res = await api.post("/auth/login", { email, password, locale: "tr" });
+//       const { token, user } = res.data.data;
+//       const userData = { ...user, token };
 
+//       await AuthService.setUser(userData); 
+
+//       return userData;
+//     } catch (err: any) {
+//       return rejectWithValue(err?.response?.data?.message || "Giriş başarısız");
+//     }
+//   }
+// );
+
+export const logoutThunk = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      await api.post("/auth/logout");
+      await AuthService.logout(); 
+      return true;
+    } catch (err: any) {
+      await AuthService.logout();
+      return rejectWithValue(err?.response?.data?.message || "Çıkış yapılamadı");
+    }
+  }
+);
 
 interface ChangePasswordParams {
   current: string;
@@ -153,8 +183,6 @@ export const verifyPasswordCodeThunk = createAsyncThunk(
   }
 );
 
-
-
 export const getCustomerProposals = createAsyncThunk(
   "auth/getCustomerProposals",
   async (params: { customer_id: string }, { rejectWithValue }) => {
@@ -177,21 +205,21 @@ export const getCustomerProposals = createAsyncThunk(
   }
 );
 
-export const logoutThunk = createAsyncThunk(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      await api.post("/auth/logout");
-      await AsyncStorage.multiRemove(["token", "user", "refreshToken"]);
-      return true;
-    } catch (err: any) {
+// export const logoutThunk = createAsyncThunk(
+//   "auth/logout",
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       await api.post("/auth/logout");
+//       await AsyncStorage.multiRemove(["token", "user", "refreshToken"]);
+//       return true;
+//     } catch (err: any) {
 
-      await AsyncStorage.multiRemove(["token", "user", "refreshToken"]);
-      const message = err.response?.data?.message || "Çıkış yapılamadı";
-      return rejectWithValue(message);
-    }
-  }
-);
+//       await AsyncStorage.multiRemove(["token", "user", "refreshToken"]);
+//       const message = err.response?.data?.message || "Çıkış yapılamadı";
+//       return rejectWithValue(message);
+//     }
+//   }
+// );
 
 
 
@@ -736,7 +764,7 @@ export const replyToOffer = createAsyncThunk(
   async ({ id, type }: { id: number; type: "confirm" | "reject" }, { rejectWithValue }) => {
     try {
       const res = await api.post(`/offers/${id}/reply`, { type });
-      return res.data; // message + phone
+      return res.data;
     } catch {
       return rejectWithValue("Teklif yanıtlanamadı");
     }
