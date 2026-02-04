@@ -20,59 +20,80 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-export const signUpThunk = createAsyncThunk(
-  "auth/register",
-  async (
-    {
+
+type SignUpArgs = {
+  email: string;
+  password: string;
+  name: string;
+  invitation_code: string;
+};
+
+export const signUpThunk = createAsyncThunk<
+  any, 
+  SignUpArgs,
+  { rejectValue: string }
+>("auth/register", async ({ email, password, name, invitation_code }, { rejectWithValue }) => {
+  try {
+    const res = await api.post("/auth/register", {
       email,
       password,
       name,
       invitation_code,
-    }: { email: string; password: string; name: string; invitation_code: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await api.post("/auth/register", {
-        email,
-        password,
-        name,
-        invitation_code,
-      });
+    });
 
-      const { token, user } = res.data.data;
-      const userData = { ...user, token };
+    const { token, user } = res.data.data;
+    const userData = { ...user, token };
 
-      await AsyncStorage.setItem("@TOKEN", token);
-      await AsyncStorage.setItem("@USER", JSON.stringify(userData));
+    await AsyncStorage.setItem("@TOKEN", String(token || ""));
+    await AsyncStorage.setItem("@USER", JSON.stringify(userData));
 
-      return userData;
-    } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message || "Kayıt başarısız");
-    }
+    return userData;
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.message ||
+      err?.response?.data?.errors?.email?.[0] ||
+      err?.message ||
+      "Kayıt başarısız";
+    return rejectWithValue(msg);
   }
-);
+});
 
-export const loginThunk = createAsyncThunk(
-  "auth/login",
-  async (
-    { email, password }: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await api.post("/auth/login", { email, password, locale: "tr" });
 
-      const { token, user } = res.data.data;
-      const userData = { ...user, token };
+type LoginArgs = { email: string; password: string };
 
-      await AsyncStorage.setItem("@TOKEN", token);
-      await AsyncStorage.setItem("@USER", JSON.stringify(userData));
+export const loginThunk = createAsyncThunk<
+  any, 
+  LoginArgs,
+  { rejectValue: string }
+>("auth/login", async ({ email, password }, { rejectWithValue }) => {
+  try {
+    const res = await api.post("/auth/login", {
+      email,
+      password,
+      locale: "tr",
+    });
 
-      return userData;
-    } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message || "Giriş başarısız");
+    if (res.data?.status === "error") {
+      return rejectWithValue(res.data?.message || "Giriş başarısız");
     }
+
+    const token = res.data?.data?.token;
+    const user = res.data?.data?.user || res.data?.data;
+
+    if (!token) return rejectWithValue("Sunucudan token alınamadı");
+
+    const userData = { ...user, token };
+
+    await AsyncStorage.setItem("@TOKEN", String(token));
+    await AsyncStorage.setItem("@USER", JSON.stringify(userData));
+
+    return userData;
+  } catch (err: any) {
+    const msg = err?.response?.data?.message || err?.message || "Giriş başarısız";
+    return rejectWithValue(msg);
   }
-);
+});
+
 
 
 interface ChangePasswordParams {
@@ -254,9 +275,10 @@ export const getPropertyFeatures = createAsyncThunk(
 
 
       if (isCreateMode) {
-        console.log('Create mode, typeId:', params.propertyTypeId);
+        console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
         
-        const templateId =  TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
+        // Template ID'yi al
+        const templateId = TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
         
         if (!templateId) {
           throw new Error(`${params.propertyTypeId} tipi için şablon bulunamadı`);
@@ -264,7 +286,7 @@ export const getPropertyFeatures = createAsyncThunk(
         
         propertyId = templateId;
       } else {
-        console.log(' Edit mode - Property details çekiliyor, propertyId:', propertyId);
+        console.log('✏️ Edit mode - Property details çekiliyor, propertyId:', propertyId);
       }
 
       const res = await api.get(`/properties/${propertyId}/details`);
@@ -333,6 +355,8 @@ function clearFeatureValues(groups: any[]): any[] {
     })
   }));
 }
+
+// api.ts veya ilgili thunk dosyanızda
  export const getNotifications = createAsyncThunk('/notifications/getNotifications', async (id: number) => {
    const res = await api.get(`/auth/notifications`);
   return res.data.data;
@@ -712,7 +736,7 @@ export const replyToOffer = createAsyncThunk(
   async ({ id, type }: { id: number; type: "confirm" | "reject" }, { rejectWithValue }) => {
     try {
       const res = await api.post(`/offers/${id}/reply`, { type });
-      return res.data; 
+      return res.data; // message + phone
     } catch {
       return rejectWithValue("Teklif yanıtlanamadı");
     }
@@ -2131,6 +2155,7 @@ export const updatePersonalPermissionsThunk = createAsyncThunk(
     }
   }
 );
+
 export const updatePersonalStatusThunk = createAsyncThunk(
   "company/updatePersonalStatus",
   async (personalId: number, { rejectWithValue }) => {

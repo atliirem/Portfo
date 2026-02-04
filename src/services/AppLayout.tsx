@@ -2,8 +2,9 @@ import React, { useEffect } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { AuthService } from "../services/AuthService";
-import { setUserFromStorage } from "../redux/Slice/authSlice";
+
 import { AppDispatch, RootState } from "../redux/store";
+import { setUserFromStorage } from "../redux/Slice/authSlice";
 
 export default function Appk({ children }: any) {
   const dispatch = useDispatch<AppDispatch>();

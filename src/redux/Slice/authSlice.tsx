@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   loginThunk,
   signUpThunk,
@@ -8,7 +9,8 @@ import {
   verifyPasswordCodeThunk,
 } from "../../../api";
 import { forgetPasswordThunk, forgetPushNewPasswordThunk } from "../../../api/publicApi";
-import { AuthService } from "../../services/AuthService";
+
+const AUTH_KEY = "@AUTH";
 
 export interface User {
   id: number;
@@ -64,6 +66,20 @@ const initialState: AuthState = {
   forgetPushError: null,
 };
 
+export const loadAuth = createAsyncThunk("auth/load", async () => {
+  try {
+    const json = await AsyncStorage.getItem(AUTH_KEY);
+    return json ? JSON.parse(json) : null;
+  } catch {
+    await AsyncStorage.removeItem(AUTH_KEY);
+    return null;
+  }
+});
+
+export const clearAuthStorage = createAsyncThunk("auth/clearStorage", async () => {
+  await AsyncStorage.removeItem(AUTH_KEY);
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -86,11 +102,20 @@ const authSlice = createSlice({
       state.verifyCodeError = null;
       state.verifyCodeSuccess = false;
     },
-    setUserFromStorage: (state, action: PayloadAction<User | null>) => {
+
+    // ✅ EKLENDİ: Appk/AuthService'den gelen user'ı state'e basmak için
+    // Appk: dispatch(setUserFromStorage(storedUser))
+    setUserFromStorage: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      state.token = action.payload?.token || null;
+      state.token = action.payload.token;
       state.isInitialized = true;
+
+      // ✅ EKLENDİ: mevcut loadAuth (@AUTH) mekanizman bozulmasın diye @AUTH da güncelleniyor
+      // Not: Reducer içinde side-effect ideal değil ama sen "kısaltmadan ekle" dediğin için
+      // mevcut yapını bozmadan en az müdahaleyle ekliyorum.
+      AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
     },
+
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
@@ -99,6 +124,25 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(loadAuth.pending, (state) => {
+        state.isInitialized = false;
+      })
+      .addCase(loadAuth.fulfilled, (state, action: PayloadAction<User | null>) => {
+        state.isInitialized = true;
+        if (action.payload) {
+          state.user = action.payload;
+          state.token = action.payload.token;
+        }
+      })
+      .addCase(loadAuth.rejected, (state) => {
+        state.isInitialized = true;
+      })
+
+      .addCase(clearAuthStorage.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+      })
+
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -108,7 +152,8 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload.token;
         state.isInitialized = true;
-        AuthService.setUser(action.payload);
+
+        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -124,7 +169,8 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.token = action.payload.token;
         state.isInitialized = true;
-        AuthService.setUser(action.payload);
+
+        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
       })
       .addCase(signUpThunk.rejected, (state, action) => {
         state.loading = false;
@@ -135,7 +181,8 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isInitialized = true;
-        AuthService.logout();
+
+        AsyncStorage.removeItem(AUTH_KEY);
       })
 
       .addCase(changePasswordThunk.pending, (state) => {
@@ -194,7 +241,8 @@ const authSlice = createSlice({
 
       .addCase(updateProfile.fulfilled, (state, action: PayloadAction<User>) => {
         state.user = action.payload;
-        AuthService.setUser(action.payload);
+
+        AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
       });
   },
 });
@@ -203,8 +251,8 @@ export const {
   clearForgetPasswordState,
   clearForgetPushState,
   clearPasswordChangeState,
-  setUserFromStorage,
   clearAuth,
+  setUserFromStorage, // ✅ EKLENDİ: dışarı export et
 } = authSlice.actions;
 
 export default authSlice.reducer;
