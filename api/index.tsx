@@ -1,7 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../src/redux/store';
 
-
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthService } from '../src/services/AuthService';
@@ -11,7 +10,6 @@ export const api = axios.create({
   headers: { Accept: "application/json" },
 });
 
-
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem("@TOKEN");
   if (token) {
@@ -20,7 +18,6 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
-
 
 type SignUpArgs = {
   email: string;
@@ -58,7 +55,6 @@ export const signUpThunk = createAsyncThunk<
     return rejectWithValue(msg);
   }
 });
-
 
 type LoginArgs = { email: string; password: string };
 
@@ -246,9 +242,6 @@ export const getProperties = createAsyncThunk(
     }
   }
 );
-
-
-
 
 export const getAllProperties = createAsyncThunk(
   "properties/getAllProperties",
