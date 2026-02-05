@@ -50,7 +50,7 @@ export const store = configureStore({
   filteredProperties: filteredPropertiesReducer,
   createOffers: createOffersReducer,
 
-// propertyActions: propertyActionsReducer,
+
     
   },
 

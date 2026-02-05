@@ -24,7 +24,7 @@ const FullScreenGallery: React.FC<Props> = ({ route, navigation }) => {
     Math.max((images?.length || 1) - 1, 0)
   );
 
-  // ✅ Yeni BackHandler syntax
+
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
@@ -34,10 +34,10 @@ const FullScreenGallery: React.FC<Props> = ({ route, navigation }) => {
         return true;
       };
 
-      // Yeni: subscription pattern
+
       const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
-      // Cleanup
+
       return () => subscription.remove();
     }, [navigation])
   );
@@ -48,9 +48,9 @@ const FullScreenGallery: React.FC<Props> = ({ route, navigation }) => {
     }
   }, [navigation]);
 
-  // Resim yoksa geri dön
+
   if (!images || images.length === 0) {
-    // useEffect içinde goBack çağır
+ 
     useEffect(() => {
       const timer = setTimeout(() => {
         if (navigation.canGoBack()) {

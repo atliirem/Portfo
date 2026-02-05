@@ -6,6 +6,7 @@ import TopBar from "../TopBar";
 import {DetailAlerts} from "../../screens/Detail/DetailAlerts"
 import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
 import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
+import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
 
 
 
@@ -15,6 +16,8 @@ export type ListingStackParamList = {
   DetailAlerts: undefined;
   SelectedPropertiesScreen: undefined;
   CompanyDetailScreen: {id: number}
+  EditTaslak: undefined;
+  
 };
 
 const Stack = createNativeStackNavigator<ListingStackParamList>();
@@ -37,6 +40,13 @@ export default function ListingStack() {
           header: () => <TopBar />,
         }}
       /> 
+       <Stack.Screen
+              name="EditTaslak"
+              component={EditTaslak}
+              options={{
+                header: () => <TopBar />,
+              }}
+            />
          <Stack.Screen
         name="SelectedPropertiesScreen"
         component={SelectedPropertiesScreen}

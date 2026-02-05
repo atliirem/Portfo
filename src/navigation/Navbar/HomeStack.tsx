@@ -15,7 +15,6 @@ import NewsDetailScreen from "../../screens/Detail/NewsDetailScreen";
  import GalleryScreen from "../../screens/GalleryScreen"
 
 
-
 import TopBar from "../TopBar";
 import Top from "../Top";
 import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
@@ -29,8 +28,6 @@ export interface GalleryImage {
     small: string;
   };
 }
-
-
 
 
 export type HomeStackParamList = {
@@ -114,12 +111,21 @@ export default function HomeStack() {
      
           options={{ headerShown: false }}
       />
+
+
+               <Stack.Screen
+        name="SelectedPropertiesScreen"
+        component={SelectedPropertiesScreen}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
   
-  <Stack.Screen
+  {/* <Stack.Screen
   name="SelectedPropertiesScreen"
   component={SelectedPropertiesScreen}
   options={{ title: "Seçilen İlanlar" }}
-/>
+/> */}
 
       {/* <Stack.Screen
         name="MyPropertiesDetailScreen"

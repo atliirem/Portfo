@@ -103,16 +103,13 @@ const authSlice = createSlice({
       state.verifyCodeSuccess = false;
     },
 
-    // ✅ EKLENDİ: Appk/AuthService'den gelen user'ı state'e basmak için
-    // Appk: dispatch(setUserFromStorage(storedUser))
+    
     setUserFromStorage: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.token = action.payload.token;
       state.isInitialized = true;
 
-      // ✅ EKLENDİ: mevcut loadAuth (@AUTH) mekanizman bozulmasın diye @AUTH da güncelleniyor
-      // Not: Reducer içinde side-effect ideal değil ama sen "kısaltmadan ekle" dediğin için
-      // mevcut yapını bozmadan en az müdahaleyle ekliyorum.
+     
       AsyncStorage.setItem(AUTH_KEY, JSON.stringify(action.payload));
     },
 

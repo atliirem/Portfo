@@ -296,9 +296,9 @@ export const getPropertyFeatures = createAsyncThunk(
 
 
       if (isCreateMode) {
-        console.log('📝 Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
+        console.log(' Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
         
-        // Template ID'yi al
+
         const templateId = TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
         
         if (!templateId) {
@@ -307,7 +307,7 @@ export const getPropertyFeatures = createAsyncThunk(
         
         propertyId = templateId;
       } else {
-        console.log('✏️ Edit mode - Property details çekiliyor, propertyId:', propertyId);
+        console.log(' Edit mode - Property details çekiliyor, propertyId:', propertyId);
       }
 
       const res = await api.get(`/properties/${propertyId}/details`);
@@ -377,7 +377,7 @@ function clearFeatureValues(groups: any[]): any[] {
   }));
 }
 
-// api.ts veya ilgili thunk dosyanızda
+
  export const getNotifications = createAsyncThunk('/notifications/getNotifications', async (id: number) => {
    const res = await api.get(`/auth/notifications`);
   return res.data.data;
