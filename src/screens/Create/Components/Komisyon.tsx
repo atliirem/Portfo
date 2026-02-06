@@ -1,4 +1,3 @@
-// imports
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -25,7 +24,7 @@ import { setSelectedCurrency } from "../../../redux/Slice/currenciesSlice";
 const Komisyon = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  // Local state (sadece inputları tutuyor)
+
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
   // Redux state

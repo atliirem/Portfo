@@ -4,7 +4,6 @@ import { CreateAdState } from '../src/redux/Slice/formSlice';
 
 const API_BASE_URL = 'https://portfoy.demo.pigasoft.com/api';
 
-
 export interface PropertyResponse {
   status: string;
   message: string;

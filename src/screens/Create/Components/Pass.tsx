@@ -40,7 +40,7 @@ const Pass = () => {
     dispatch(getCurrencies());
   }, [dispatch]);
 
-  // Para birimi seçimi
+
   const handleCurrencySelect = (currencyTitle: string, currencyId: number) => {
     dispatch(
       setPass({
@@ -66,7 +66,7 @@ const Pass = () => {
                       value={pass.currency || ""}
                       editable={false} onChangeText={function (t: string): void {
                           throw new Error("Function not implemented.");
-                      } }          />
+                      } }/>
         </TouchableOpacity>
 
 

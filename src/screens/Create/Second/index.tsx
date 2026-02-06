@@ -25,7 +25,7 @@ import { getMyProperties } from "../../../../api";
 import { mapStateToFormData } from "../../../redux/Slice/mapStateToFormData";
 import { updateProperty } from "../../../../api/CreateThunk";
 
-const TAB_BAR_HEIGHT = 80;
+const TAB_BAR_HEIGHT =  80;
 
 const Second = () => {
   const dispatch = useAppDispatch();
@@ -47,7 +47,6 @@ const Second = () => {
     };
   }, [dispatch]);
 
-  // Validasyon kontrolleri
   const isLocationValid = !!(createAdData.location.country && createAdData.location.city);
   const isMapValid = createAdData.mapCoordinates.isSet;
   const isGalleryValid = createAdData.galleryStatus.isValid;

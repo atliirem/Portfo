@@ -58,11 +58,11 @@ const CompaniesCard: React.FC<CompaniesCardProps> = ({
           {city && <Text style={styles.city}>{city}</Text>}
         </View>
 
-        <Ionicons
+        {/* <Ionicons
           name="chevron-forward-outline"
           size={24}
           color="#c4c4c4"
-        />
+        /> */}
       </View>
     </TouchableOpacity>
   );

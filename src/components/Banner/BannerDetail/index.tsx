@@ -40,6 +40,7 @@ export const BannerDetail: React.FC<BannerDetailProps> = ({ id, isDraft = false 
     return null;
   }
 
+
   const formatValue = (feature: any): string => {
     const { value, input_type } = feature;
 

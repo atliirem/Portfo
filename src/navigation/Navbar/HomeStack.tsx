@@ -1,19 +1,16 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
-
 import HomeScreen from "../../screens/HomeScreen";
-import {CustomerOffers} from "../../screens/Detail/CustomerOffers";
+import { CustomerOffers } from "../../screens/Detail/CustomerOffers";
 
-import {DetailAlerts} from "../../screens/Detail/DetailAlerts";
- import Offers from "../../screens/Offers";
- import Contact from "../../screens/Contact";
+import { DetailAlerts } from "../../screens/Detail/DetailAlerts";
+import Offers from "../../screens/Offers";
+import Contact from "../../screens/Contact";
 import PropertiesScreen from "../../screens/Detail/DetailProperties";
 import NewsDetailScreen from "../../screens/Detail/NewsDetailScreen";
- import NewsListScreen from "../../screens/Detail/DetailNews";
- import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
- import GalleryScreen from "../../screens/GalleryScreen"
-
+import NewsListScreen from "../../screens/Detail/DetailNews";
+import PropertiesDetailScreen from "../../screens/Detail/PropertiesDetailScreen";
+import GalleryScreen from "../../screens/GalleryScreen"
 
 import TopBar from "../TopBar";
 import Top from "../Top";
@@ -41,24 +38,27 @@ export type HomeStackParamList = {
   PropertiesScreen: { id: number };
   NewsDetailScreen: { id: number };
   NewsListScreen: { id: number };
- GalleryScreen: {
-  images: GalleryImage[]; 
-  startIndex: number;
-  MyPropertiesDetailScreen: {id: number};
+  GalleryScreen: {
+    images: GalleryImage[];
+    startIndex: number;
+  };
+  MyPropertiesDetailScreen: { id: number };
   EditTaslak: undefined;
 
-FullScreenGallery: {
+  FullScreenGallery: {
     images: { uri: string }[];
     startIndex: number;
   };
-     Second: undefined;
+  Second: undefined;
   Taslak: { propertyId: number };
 
-  CompanyDetailScreen: {id: number}
+  CompanyDetailScreen: { id: number }
   SelectedPropertiesScreen: undefined;
-   PropertiesScreenProfile: {id: number}
-};
-};
+  PropertiesScreenProfile: { id: number }
+
+
+}
+
 
 
 
@@ -75,14 +75,14 @@ export default function HomeStack() {
           header: () => <TopBar />,
         }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="EditTaslak"
         component={EditTaslak}
         options={{
           header: () => <TopBar />,
         }}
       />
-             <Stack.Screen
+      <Stack.Screen
         name="PropertiesScreenProfile"
         component={PropertiesScreen}
         options={{
@@ -92,36 +92,36 @@ export default function HomeStack() {
       <Stack.Screen
         name="CustomerOffers"
         component={CustomerOffers}
-       options={{
+        options={{
           header: () => <Top />,
         }}
       />
-      <Stack.Screen 
-  name="FullScreenGallery" 
-  component={FullScreenGallery}
-  options={{ 
-    headerShown: false,
-    presentation: 'fullScreenModal' 
-  }}
-/>
+      <Stack.Screen
+        name="FullScreenGallery"
+        component={FullScreenGallery}
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal'
+        }}
+      />
 
       <Stack.Screen
         name="PropertiesDetailScreen"
         component={PropertiesDetailScreen}
-     
-          options={{ headerShown: false }}
+
+        options={{ headerShown: false }}
       />
 
 
-               <Stack.Screen
+      <Stack.Screen
         name="SelectedPropertiesScreen"
         component={SelectedPropertiesScreen}
         options={{
-          header: () => <TopBar />, 
+          header: () => <TopBar />,
         }}
-      />  
-  
-  {/* <Stack.Screen
+      />
+
+      {/* <Stack.Screen
   name="SelectedPropertiesScreen"
   component={SelectedPropertiesScreen}
   options={{ title: "Seçilen İlanlar" }}
@@ -134,28 +134,28 @@ export default function HomeStack() {
           options={{ headerShown: false }}
       />
        */}
-      
-       <Stack.Screen
+
+      <Stack.Screen
         name="GalleryScreen"
         component={GalleryScreen}
-       options={{
+        options={{
           header: () => <TopBar />,
         }}
       />
-      
-     
-       <Stack.Screen
+
+
+      <Stack.Screen
         name="CompanyDetailScreen"
         component={CompanyDetailScreen}
-       options={{
+        options={{
           header: () => <TopBar />,
         }}
       />
-      
+
       <Stack.Screen
         name="DetailAlerts"
         component={DetailAlerts}
-       options={{
+        options={{
           header: () => <TopBar />,
         }}
       />
@@ -169,7 +169,7 @@ export default function HomeStack() {
       <Stack.Screen
         name="Offers"
         component={Offers}
-       options={{
+        options={{
           header: () => <Top />,
         }}
       />
@@ -183,26 +183,26 @@ export default function HomeStack() {
       <Stack.Screen
         name="PropertiesScreen"
         component={PropertiesScreen}
-      options={{
-           header: () => <Top />,
+        options={{
+          header: () => <Top />,
         }}
       />
       <Stack.Screen
         name="NewsDetailScreen"
         component={NewsDetailScreen}
-       options={{
+        options={{
           header: () => <Top />,
         }}
       />
       <Stack.Screen
         name="NewsListScreen"
         component={NewsListScreen}
-       options={{
+        options={{
           header: () => <TopBar />,
         }}
-      /> 
+      />
 
- 
+
     </Stack.Navigator>
   );
 }

@@ -1,4 +1,3 @@
-// EditTaslak.tsx
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, FlatList, Alert, ActivityIndicator, Text } from "react-native";
 import { ComponentButton } from "../../../../components/Buttons/componentsButton";
@@ -68,6 +67,7 @@ export default function EditTaslak({ locationData: propLocationData, propertyId:
     try {
       const propertyData = await dispatch(getProperties(propertyId)).unwrap();
 
+
       if (!propertyData || !propertyData.id) {
         Alert.alert("Hata", "İlan bulunamadı.");
         return;
@@ -104,7 +104,6 @@ export default function EditTaslak({ locationData: propLocationData, propertyId:
             longitude: String(listItem.map.longitude),
           });
         }
-
         dispatch(setFormFeatures({ propertyId, features: listItem.features || [] }));
       } else {
         Alert.alert("Hata", "İlan verileri yüklenemedi.");

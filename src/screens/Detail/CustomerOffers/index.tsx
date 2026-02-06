@@ -24,9 +24,6 @@ type NavigationProp = NativeStackNavigationProp<
 
 export const CustomerOffers: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-
-
-  
   
   const navigation = useNavigation<NavigationProp>();
 

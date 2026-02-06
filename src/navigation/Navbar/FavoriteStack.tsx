@@ -6,6 +6,8 @@ import TopBar from "../TopBar";
 import {DetailAlerts} from "../../screens/Detail/DetailAlerts";
 import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
 import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
+import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
+import PropertiesScreenProfile from "../../screens/Detail/DetailPropertiesProfile"
 
 export type FavoriteStackParamList = {
   Favorite: undefined;
@@ -13,8 +15,9 @@ export type FavoriteStackParamList = {
   DetailAlerts: undefined;
   SelectedPropertiesScreen: undefined;
   CompanyDetailScreen: {id: number}
-  
-  
+  EditTaslal: undefined;
+  PropertiesScreenProfile: undefined;
+
 };
 
 const Stack = createNativeStackNavigator<FavoriteStackParamList>();
@@ -39,9 +42,25 @@ export default function FavoriteStack() {
         }}
       />  
 
+                   <Stack.Screen
+        name="PropertiesScreenProfile"
+        component={PropertiesScreenProfile}
+        options={{
+          header: () => <TopBar />, 
+        }}
+      />  
+
+
       <Stack.Screen
         name="DetailAlerts"
         component={DetailAlerts}
+       options={{
+          header: () => <TopBar />,
+        }}
+      /> 
+            <Stack.Screen
+        name="EditTaslak"
+        component={EditTaslak}
        options={{
           header: () => <TopBar />,
         }}

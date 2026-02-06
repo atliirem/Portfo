@@ -7,6 +7,16 @@ import {DetailAlerts} from "../../screens/Detail/DetailAlerts"
 import SelectedPropertiesScreen from "../../screens/Detail/SelectedProperties";
 import CompanyDetailScreen from "../../screens/Company/CompaniesDetail";
 import EditTaslak from "../../screens/Create/EditProperty/EditTaslak";
+import GalleryScreen from "../../screens/GalleryScreen";
+import FullScreenGallery from "../../screens/GalleryScreen/FullScreenGallery";
+
+
+export interface GalleryImage {
+  id: number;
+  path: {
+    small: string;
+  };
+}
 
 
 
@@ -17,6 +27,15 @@ export type ListingStackParamList = {
   SelectedPropertiesScreen: undefined;
   CompanyDetailScreen: {id: number}
   EditTaslak: undefined;
+   GalleryScreen: {
+    images: GalleryImage[]; 
+    startIndex: number; 
+    };
+
+    FullScreenGallery: {
+    images: { uri: string }[];
+    startIndex: number;
+  };
   
 };
 
@@ -68,6 +87,24 @@ export default function ListingStack() {
         component={PropertiesDetailScreen}
         options={{ headerShown: false }}
       />
+
+         <Stack.Screen
+        name="GalleryScreen"
+        component={GalleryScreen}
+       options={{
+          header: () => <TopBar />,
+        }}
+      />
+
+            <Stack.Screen 
+  name="FullScreenGallery" 
+  component={FullScreenGallery}
+  options={{ 
+    headerShown: false,
+    presentation: 'fullScreenModal' 
+  }}
+/>
+      
     </Stack.Navigator>
   );
 }
