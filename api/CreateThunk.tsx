@@ -10,7 +10,6 @@ const api = axios.create({
   },
 });
 
-
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem("@TOKEN");
   console.log("INTERCEPTOR TOKEN:", token);
@@ -45,8 +44,6 @@ export const createProperty = async (formData: FormData) => {
     throw err.response?.data || err;
   }
 };
-
-
 
 export const updateProperty = async (propertyId: number, formData: FormData) => {
   try {

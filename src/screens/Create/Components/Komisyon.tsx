@@ -27,7 +27,6 @@ const Komisyon = () => {
 
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
-  // Redux state
   const commission = useAppSelector((state) => state.form.commission);
 
   const {

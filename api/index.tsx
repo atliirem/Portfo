@@ -7,7 +7,8 @@ import { AuthService } from '../src/services/AuthService';
 
 export const api = axios.create({
   baseURL: "https://portfoy.demo.pigasoft.com/api",
-  headers: { Accept: "application/json" },
+  headers: {Accept: "application/json"}
+
 });
 
 api.interceptors.request.use(async (config) => {
@@ -56,7 +57,8 @@ export const signUpThunk = createAsyncThunk<
   }
 });
 
-type LoginArgs = { email: string; password: string };
+type LoginArgs={ email: string; password: string };
+
 
 export const loginThunk = createAsyncThunk<
   any, 
@@ -150,8 +152,6 @@ export const changePasswordThunk = createAsyncThunk(
     }
   }
 );
-
-
 interface VerifyPasswordCodeParams {
   code: string;
   email: string;
@@ -191,7 +191,6 @@ export const getCustomerProposals = createAsyncThunk(
       if (res.data.status !== "success") {
         throw new Error(res.data.message || "İşlem başarısız");
       }
-
       return res.data;
     } catch (err: any) {
       const message =
@@ -231,7 +230,6 @@ export const getProperties = createAsyncThunk(
       if (res.data.status !== "success") {
         throw new Error(res.data.message || "Bilgi alınamadı");
       }
-     
       return res.data.data; 
     } catch (err: any) {
       const msg =
@@ -296,7 +294,7 @@ export const getPropertyFeatures = createAsyncThunk(
 
 
       if (isCreateMode) {
-        console.log(' Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
+        console.log('Create mode - Template property kullanılıyor, typeId:', params.propertyTypeId);
         
 
         const templateId = TEMPLATE_PROPERTY_IDS[params.propertyTypeId!];
@@ -307,7 +305,7 @@ export const getPropertyFeatures = createAsyncThunk(
         
         propertyId = templateId;
       } else {
-        console.log(' Edit mode - Property details çekiliyor, propertyId:', propertyId);
+        console.log('Edit mode -Property details çekiliyor, propertyId:', propertyId);
       }
 
       const res = await api.get(`/properties/${propertyId}/details`);
@@ -320,7 +318,7 @@ export const getPropertyFeatures = createAsyncThunk(
 
      
       if (isCreateMode) {
-        console.log('🧹 Template values temizleniyor...');
+        console.log(' Template values temizleniyor...');
         features = clearFeatureValues(features);
       }
 
@@ -345,7 +343,6 @@ function clearFeatureValues(groups: any[]): any[] {
       const isMultiple = feature.details?.multiple === true || 
                         feature.details?.multiple === "true";
       
-
       let clearedValue;
       
       if (feature.input_type === "checkbox") {
@@ -368,7 +365,6 @@ function clearFeatureValues(groups: any[]): any[] {
       } else {
         clearedValue = "";
       }
-
       return {
         ...feature,
         value: clearedValue
@@ -1069,8 +1065,6 @@ export const getCustomers = createAsyncThunk(
     }
   }
  );
-
-
  export const deleteCustomer = createAsyncThunk(
   'delete/deleteCustomer',
   async ( id , { rejectWithValue }) => {
@@ -1503,7 +1497,6 @@ export const getCities = createAsyncThunk(
   }
 );
 
-
 export const getDistrict = createAsyncThunk(
   "district/getDistrict",
   async (cityID: string, { rejectWithValue }) => {
@@ -1841,7 +1834,6 @@ export const uploadCompanyLogoThunk = createAsyncThunk<
     );
   }
 });
-
 
 export const uploadCoverImage = createAsyncThunk(
   "gallery/uploadCoverImage",

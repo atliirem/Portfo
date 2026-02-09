@@ -36,6 +36,7 @@ const Pass = () => {
 
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
+
   useEffect(() => {
     dispatch(getCurrencies());
   }, [dispatch]);
@@ -60,8 +61,7 @@ const Pass = () => {
    
         <TouchableOpacity onPress={() => setCurrencyModalVisible(true)}>
           <TextInputUser
-                   
-                      isModal
+                    isModal
                       placeholder="Para birimi seç"
                       value={pass.currency || ""}
                       editable={false} onChangeText={function (t: string): void {
@@ -75,6 +75,7 @@ const Pass = () => {
           onBackdropPress={() => setCurrencyModalVisible(false)}
           style={styles.modal}
         >
+
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Para Birimi Seç</Text>
 
@@ -102,7 +103,6 @@ const Pass = () => {
             )}
           </View>
         </Modal>
-
 
         <View
           style={{
@@ -144,9 +144,6 @@ const Pass = () => {
 
 export default Pass;
 
-//
-// STYLES
-//
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#fff" },
   scrollContainer: {},
